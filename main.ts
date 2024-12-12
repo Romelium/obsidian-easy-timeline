@@ -24,34 +24,32 @@ export default class MyPlugin extends Plugin {
 			callback: async () => {
 				// get active file and check if it is markdown.
 				const file = this.app.workspace.getActiveFile();
-				if(!file || file.extension != 'md')
+				if (!file || file.extension != 'md')
 					return;
 
 				// default reference will be file created date. Note: it can easily change to external causes like syncing
-				let reference = new Date(file.stat.ctime) 
+				let reference = new Date(file.stat.ctime)
 				// if there is a valid 'created' property in file, use that instead
 				await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
 					// We are also using chronos for parsing 'created' property for convinence and its versatility. the Note: we are using the file created date as the reference which we would hope to not use.
 					const createdProperty = parseDate(frontmatter["created"], reference)
 					// Check if valid date
-					if(createdProperty)
+					if (createdProperty)
 						reference = createdProperty;
 				})
-				
+
 				// Read content in file
 				const content = await this.app.vault.read(file);
-				
+
 				// Get dates in file from natural language
 				const parsedResult = parse(content, reference);
-				
+
 				// Print output
-				if (parsedResult.length == 0)
-				{
+				if (parsedResult.length == 0) {
 					console.log("No dates in markdown file.");
 				}
 				let out = "Dates in markdown file:";
-				for(const result of parsedResult)
-				{
+				for (const result of parsedResult) {
 					out += "\n - " + result.date().toString();
 				}
 				console.log(out);
@@ -95,7 +93,7 @@ class SampleSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this;
 
 		containerEl.empty();
 
