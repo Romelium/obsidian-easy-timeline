@@ -1,3 +1,4 @@
+import { parse, parseDate } from 'chrono-node';
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
@@ -16,12 +17,44 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// This adds a simple command that can be triggered anywhere
+		// Logs all the dates that is in the active markdown file
 		this.addCommand({
-			id: 'command',
-			name: 'Command',
-			callback: () => {
-				// console.log('click');
+			id: 'get-dates',
+			name: 'Get Dates',
+			callback: async () => {
+				// get active file and check if it is markdown.
+				const file = this.app.workspace.getActiveFile();
+				if(!file || file.extension != 'md')
+					return;
+
+				// default reference will be file created date. Note: it can easily change to external causes like syncing
+				let reference = new Date(file.stat.ctime) 
+				// if there is a valid 'created' property in file, use that instead
+				await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+					// We are also using chronos for parsing 'created' property for convinence and its versatility. the Note: we are using the file created date as the reference which we would hope to not use.
+					const createdProperty = parseDate(frontmatter["created"], reference)
+					// Check if valid date
+					if(createdProperty)
+						reference = createdProperty;
+				})
+				
+				// Read content in file
+				const content = await this.app.vault.read(file);
+				
+				// Get dates in file from natural language
+				const parsedResult = parse(content, reference);
+				
+				// Print output
+				if (parsedResult.length == 0)
+				{
+					console.log("No dates in markdown file.");
+				}
+				let out = "Dates in markdown file:";
+				for(const result of parsedResult)
+				{
+					out += "\n - " + result.date().toString();
+				}
+				console.log(out);
 			}
 		});
 
