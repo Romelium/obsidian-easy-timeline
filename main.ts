@@ -71,7 +71,7 @@ export default class MyPlugin extends Plugin {
 						if (!found) {
 							console.log('No matching property found')
 						} else if (!referenceProperty) {
-							console.log('Found matching property but not it is valid')
+							console.log('Found matching property but it is not valid')
 						}
 					} else {
 						if (frontmatter[this.settings.reference]) {
