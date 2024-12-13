@@ -3,18 +3,18 @@ import { App, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
+interface EasyTimelineSettings {
 	useRegex: boolean,
 	reference: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: EasyTimelineSettings = {
 	useRegex: false,
 	reference: 'created'
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class EasyTimelinePlugin extends Plugin {
+	settings: EasyTimelineSettings;
 
 	async onload() {
 		await this.loadSettings();
@@ -106,7 +106,7 @@ export default class MyPlugin extends Plugin {
 		});
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new EasyTimelineSettingTab(this.app, this));
 	}
 	
 	async loadSettings() {
@@ -118,10 +118,10 @@ export default class MyPlugin extends Plugin {
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+class EasyTimelineSettingTab extends PluginSettingTab {
+	plugin: EasyTimelinePlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: EasyTimelinePlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
