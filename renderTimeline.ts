@@ -122,7 +122,7 @@ export function renderTimeline(timelineData: TimelineData) {
                             }
                         } else if(i == array.length - 1){
                             if(!event.author){
-                                const regex = /^author::? (.+)$/;
+                                const regex =  /^\[?author::? (.+?)\]?$/;
                                 const match = value.match(regex);
 
                                 if (match) {
