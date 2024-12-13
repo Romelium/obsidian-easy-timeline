@@ -1,5 +1,5 @@
 import { parse, parseDate } from 'chrono-node';
-import { App, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, getFrontMatterInfo, MarkdownView, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
@@ -107,8 +107,36 @@ export default class EasyTimelinePlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new EasyTimelineSettingTab(this.app, this));
+
+		const language = 'timeline'
+		this.registerMarkdownCodeBlockProcessor(language, async (source, el, ctx) => {
+			// Get active file
+			const file = this.app.workspace.getActiveFile();
+			if (!file) return;  // Exit if no file
+
+			// Read file content
+			const text = await this.app.vault.read(file);
+
+			// Get front matter end position
+			let { contentStart } = getFrontMatterInfo(text);
+
+			// Define and remove source block
+			const sourceBlock = "```" + language + "\n" + source + "\n```";
+			const content = text.slice(contentStart).replace(sourceBlock, '');
+
+			// Create heading
+			el.createEl('h1', { text: "Timeline" });
+
+			// Split content into lines, process non-empty
+			content.split('\n').forEach(line => {
+				if (line.trim()) {
+					console.log(line);  // Log line
+					el.createEl('p', { text: line });  // Add paragraph
+				}
+			});
+		});
 	}
-	
+
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
