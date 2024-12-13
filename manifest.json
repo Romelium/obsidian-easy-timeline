@@ -3,9 +3,9 @@
 	"name": "Easy Timeline",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "An Obsidian plugin to easily add timelines",
+	"author": "Romelium",
+	"authorUrl": "https://github.com/romelium",
+	"fundingUrl": "https://ko-fi.com/romelium",
 	"isDesktopOnly": false
 }
