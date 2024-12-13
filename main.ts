@@ -1,5 +1,7 @@
 import { parse, parseDate } from 'chrono-node';
-import { App, getFrontMatterInfo, MarkdownView, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { App, getFrontMatterInfo, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { renderTimeline, TimelineData } from 'renderTimeline';
+import { sampleTimelineData } from 'sampleTimelineData';
 
 // Remember to rename these classes and interfaces!
 
@@ -139,25 +141,19 @@ export default class EasyTimelinePlugin extends Plugin {
 
 			// Get timeline object representation
 			const timeline = content
-				.split('\n') // Split content into lines and process dates for each lines
-				.map(line => { // Process dates for each lines into objects with the line
+				.split('\n\n') // Split content into lines and process dates for each lines
+				.map(line => {
 					return {
-						text: line.trim(),
-						dates: parse(line, reference).map(value => value.date())
+						details: line.trim(),
+						date: parseDate(line, reference)
 					};
 				})
-				.filter(value => value.dates.length != 0) // Don't include lines with no valid dates
-				.sort(value => -value.dates[0].valueOf()) // Sort decending by the first date mentioned
+				.filter(value => value.date != null) // Don't include lines with no valid dates
+				.sort(value => -value.date!.valueOf()) as TimelineData; // Sort decending by the first date mentioned
 
 			// Render timeline
-
-			// Create heading
-			el.createEl('h1', { text: "Timeline" });
-			for (const { text, dates } of timeline) {
-				// Create date heading using the first date mentioned
-				el.createEl('h2', { text: dates[0].toLocaleString() });
-				el.createEl('p', { text: text });
-			}
+			const timelineEl = renderTimeline(timeline);
+			el.replaceWith(timelineEl)
 		});
 	}
 
