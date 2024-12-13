@@ -118,7 +118,7 @@ export default class EasyTimelinePlugin extends Plugin {
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new EasyTimelineSettingTab(this.app, this));
 
-		const language = 'timeline'
+		const language = 'timeline';
 		this.registerMarkdownCodeBlockProcessor(language, async (source, el, ctx) => {
 			// Get active file
 			const file = this.app.workspace.getActiveFile();
@@ -134,16 +134,31 @@ export default class EasyTimelinePlugin extends Plugin {
 			const sourceBlock = "```" + language + "\n" + source + "\n```";
 			const content = text.slice(contentStart).replace(sourceBlock, '');
 
+			// Get reference
+			const reference = await this.getReference(file);
+			if (!reference)
+				return;
+
+			const timeline = content
+				.split('\n') // Split content into lines and process dates for each lines
+				.map(line => { // Process dates for each lines into objects with the line
+					return {
+						text: line.trim(),
+						dates: parse(line, reference).map(value => value.date())
+					};
+				})
+				.filter(value => value.dates.length != 0) // Don't include lines with no valid dates
+				.sort(value => -value.dates[0].valueOf()) // Sort decending by the first date mentioned
+
+			// Render timeline
+
 			// Create heading
 			el.createEl('h1', { text: "Timeline" });
-
-			// Split content into lines, process non-empty
-			content.split('\n').forEach(line => {
-				if (line.trim()) {
-					console.log(line);  // Log line
-					el.createEl('p', { text: line });  // Add paragraph
-				}
-			});
+			for (const { text, dates } of timeline) {
+				// Create date heading using the first date mentioned
+				el.createEl('h2', { text: dates[0].toLocaleString() });
+				el.createEl('p', { text: text });
+			}
 		});
 	}
 
