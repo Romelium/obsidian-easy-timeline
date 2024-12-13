@@ -23,7 +23,7 @@ export default class EasyTimelinePlugin extends Plugin {
 	* @param file - The file to process.
 	* @returns A Promise resolving to the reference date or a null for invalid regex in settings
 	*/
-	async getReference(file: TFile): Promise<Date | null> {
+	async findReference(file: TFile): Promise<Date | null> {
 		let regex: RegExp | null = null;
 
 		// Check if regex is valid
@@ -92,15 +92,15 @@ export default class EasyTimelinePlugin extends Plugin {
 				if (!file || file.extension != 'md')
 					return;
 
-				// Get reference
-				const reference = await this.getReference(file);
-				if (!reference)
+				// find reference date in file
+				const reference = await this.findReference(file);
+				if (!reference) // invalid regex
 					return;
 
-				// Read content in file
+				// Read file content
 				const content = await this.app.vault.read(file);
 
-				// Get dates in file from natural language
+				// Get dates in file content
 				const parsedResult = parse(content, reference);
 
 				// Print output
@@ -127,18 +127,17 @@ export default class EasyTimelinePlugin extends Plugin {
 			// Read file content
 			const text = await this.app.vault.read(file);
 
-			// Get front matter end position
+			// Remove frontmatter and source block from file content
 			let { contentStart } = getFrontMatterInfo(text);
-
-			// Define and remove source block
 			const sourceBlock = "```" + language + "\n" + source + "\n```";
 			const content = text.slice(contentStart).replace(sourceBlock, '');
 
-			// Get reference
-			const reference = await this.getReference(file);
-			if (!reference)
+			// find reference date in content
+			const reference = await this.findReference(file);
+			if (!reference) // invalid regex
 				return;
 
+			// Get timeline object representation
 			const timeline = content
 				.split('\n') // Split content into lines and process dates for each lines
 				.map(line => { // Process dates for each lines into objects with the line
