@@ -1,5 +1,5 @@
 import { parse, parseDate } from 'chrono-node';
-import { App, getFrontMatterInfo, MarkdownView, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, getFrontMatterInfo, MarkdownView, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
@@ -16,6 +16,69 @@ const DEFAULT_SETTINGS: EasyTimelineSettings = {
 export default class EasyTimelinePlugin extends Plugin {
 	settings: EasyTimelineSettings;
 
+	/**
+	* Retrieves the reference date for a file, using a regex pattern or a frontmatter property.
+	* Defaults to the file's creation date if no valid reference is found.
+	* 
+	* @param file - The file to process.
+	* @returns A Promise resolving to the reference date or a null for invalid regex in settings
+	*/
+	async getReference(file: TFile): Promise<Date | null> {
+		let regex: RegExp | null = null;
+
+		// Check if regex is valid
+		if (this.settings.useRegex) {
+			try {
+				regex = new RegExp(this.settings.reference);
+			} catch (e) {
+				new Notice("Invalid Regex", 2000);
+				return null;
+			}
+		}
+
+		// Default to file creation date. Note: It can easily change due to external causes like syncing
+		let ref = new Date(file.stat.ctime);
+
+		// Process frontmatter to find reference
+		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+			let refProp = null;
+
+			// Parse date using the reference or default value. Note: we are using the file created date as the reference which we would hope to not use.
+			const parseDateValue = (value: string) => parseDate(value, ref);
+
+			if (regex) {
+				let found = false;
+
+				// Search for matching key with regex
+				for (const [key, value] of Object.entries(frontmatter)) {
+					if (regex.test(key)) {
+						found = true;
+						if (typeof value === 'string') {
+							refProp = parseDateValue(value);
+						}
+						break;
+					}
+				}
+
+				if (!found) console.log('No matching property');
+				else if (!refProp) console.log('Invalid reference');
+			} else {
+				// Check for a direct reference property
+				if (frontmatter[this.settings.reference]) {
+					refProp = parseDateValue(frontmatter[this.settings.reference]);
+				} else {
+					console.log('No matching property');
+				}
+			}
+
+			// Use the found reference or fallback to file creation date
+			if (refProp) ref = refProp;
+			else console.log('Using file created timestamp');
+		});
+
+		return ref;
+	}
+
 	async onload() {
 		await this.loadSettings();
 
@@ -24,68 +87,15 @@ export default class EasyTimelinePlugin extends Plugin {
 			id: 'get-dates',
 			name: 'Get Dates',
 			callback: async () => {
-				let regex: RegExp | null = null;
-				if (this.settings.useRegex) {
-					try {
-						regex = new RegExp(this.settings.reference);
-					} catch (e) {
-						new Notice("Easy Timeline: Invalid Regex", 2000)
-						return;
-					}
-				}
-
 				// get active file and check if it is markdown.
 				const file = this.app.workspace.getActiveFile();
 				if (!file || file.extension != 'md')
 					return;
 
-
-				// default reference will be file created date. Note: it can easily change to external causes like syncing
-				let reference = new Date(file.stat.ctime)
-
-				// if there is a valid reference property in file, use that instead
-				await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-					let referenceProperty = null;
-
-					// We are also using chronos for parsing reference property for convinence and its versatility. the Note: we are using the file created date as the reference which we would hope to not use.
-					const parseProperty = (value: string) => parseDate(value, reference);
-
-					if (regex) {
-						let found = false;
-
-						// Iterate over the frontmatter to find a matching key based on the regex
-						for (const [key, value] of Object.entries(frontmatter)) {
-							if (regex.test(key)) {
-								found = true;
-
-								// Parse the value if it's a string
-								if (typeof value === 'string') {
-									referenceProperty = parseProperty(value);
-								}
-								break;
-							}
-						}
-
-						if (!found) {
-							console.log('No matching property found')
-						} else if (!referenceProperty) {
-							console.log('Found matching property but it isnot valid')
-						}
-					} else {
-						if (frontmatter[this.settings.reference]) {
-							referenceProperty = parseProperty(frontmatter[this.settings.reference]);
-						} else {
-							console.log('No matching property found')
-						}
-					}
-
-					// Validate the parsed date
-					if (referenceProperty) {
-						reference = referenceProperty;
-					} else {
-						console.log('Defaulting to file created timestamp')
-					}
-				});
+				// Get reference
+				const reference = await this.getReference(file);
+				if (!reference)
+					return;
 
 				// Read content in file
 				const content = await this.app.vault.read(file);
