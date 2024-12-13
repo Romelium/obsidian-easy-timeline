@@ -19,8 +19,6 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-
-
 		// Logs all the dates that is in the active markdown file
 		this.addCommand({
 			id: 'get-dates',
@@ -71,7 +69,7 @@ export default class MyPlugin extends Plugin {
 						if (!found) {
 							console.log('No matching property found')
 						} else if (!referenceProperty) {
-							console.log('Found matching property but it is not valid')
+							console.log('Found matching property but it isnot valid')
 						}
 					} else {
 						if (frontmatter[this.settings.reference]) {
@@ -109,23 +107,8 @@ export default class MyPlugin extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			// console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => {
-			// console.log('setInterval'), 5 * 60 * 1000)
-		}));
 	}
-
-	onunload() {
-
-	}
-
+	
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
