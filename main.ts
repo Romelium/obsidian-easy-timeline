@@ -27,21 +27,19 @@ export default class EasyTimelinePlugin extends Plugin {
 	* @param file - The file to process.
 	* @returns A Promise resolving to the reference date or a null for invalid regex in settings
 	*/
-	async findReference(file: TFile): Promise<Date | null> {
+	async findReference(file: TFile): Promise<Date> {
+		// Default to file creation date. Note: It can easily change due to external causes like syncing
+		let ref = new Date(file.stat.ctime);
+		
 		let regex: RegExp | null = null;
-
 		// Check if regex is valid
 		if (this.settings.useRegex) {
 			try {
 				regex = new RegExp(this.settings.reference);
 			} catch (e) {
-				new Notice("Invalid Regex", 2000);
-				return null;
+				return ref;
 			}
 		}
-
-		// Default to file creation date. Note: It can easily change due to external causes like syncing
-		let ref = new Date(file.stat.ctime);
 
 		// Process frontmatter to find reference
 		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
@@ -138,8 +136,6 @@ export default class EasyTimelinePlugin extends Plugin {
 
 			// find reference date in content
 			const reference = await this.findReference(file);
-			if (!reference) // invalid regex
-				return;
 
 			// Get timeline object representation
 			const timeline = content
