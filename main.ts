@@ -45,8 +45,8 @@ export default class EasyTimelinePlugin extends Plugin {
 		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
 			let refProp = null;
 
-			// Parse date using the reference or default value. Note: we are using the file created date as the reference which we would hope to not use.
-			const parseDateValue = (value: string) => parseDate(value, ref);
+			// Parse date using the reference or default value. 
+			const parseDateValue = (value: string) => strict.parseDate(value, ref);
 
 			if (regex) {
 				let found = false;
