@@ -86,39 +86,6 @@ export default class EasyTimelinePlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// Logs all the dates that is in the active markdown file
-		this.addCommand({
-			id: 'get-dates',
-			name: 'Get Dates',
-			callback: async () => {
-				// get active file and check if it is markdown.
-				const file = this.app.workspace.getActiveFile();
-				if (!file || file.extension != 'md')
-					return;
-
-				// find reference date in file
-				const reference = await this.findReference(file);
-				if (!reference) // invalid regex
-					return;
-
-				// Read file content
-				const content = await this.app.vault.read(file);
-
-				// Get dates in file content
-				const parsedResult = parse(content, reference);
-
-				// Print output
-				if (parsedResult.length == 0) {
-					console.log("No dates in markdown file.");
-				}
-				let out = "Dates in markdown file:";
-				for (const result of parsedResult) {
-					out += "\n - " + result.date().toString();
-				}
-				console.log(out);
-			}
-		});
-
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new EasyTimelineSettingTab(this.app, this));
 
