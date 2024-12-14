@@ -14,6 +14,12 @@ export function isMarkdownHeader(str: string) {
     }
 }
 
+// Sanitize all inline metadata to just be the value
+export function sanitizeInlineMetadata(input: string) {
+    const regex = /\[[^\[\]]+::\s*([^\[\]]+)\]/g;
+    return input.replace(regex, '$1');
+}
+
 // Get all inline metadata same as https://blacksmithgu.github.io/obsidian-dataview/annotation/add-metadata/
 export function extractInlineMetadata(input: string) {
     // Define regex to match the pattern [ID:: Value]

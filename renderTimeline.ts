@@ -1,20 +1,13 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/js/all.min.js';
-import { isMarkdownHeader } from 'utils';
-
-export enum TimelineEventStatus {
-    success = 'text-success',
-    failure = 'text-danger',
-    info = 'text-info',
-    warning = 'text-warning',
-}
+import { extractInlineMetadata, isMarkdownHeader, sanitizeInlineMetadata } from 'utils';
 
 export interface TimelineEvent {
     date: Date;
     title?: string; // Type of the event (e.g., "Job Created", "Job Edited")
     icon?: string; // Icon class names (e.g., "asterisk")
-    status?: TimelineEventStatus;
-    details: string | Record<string, string>; // Key-value pairs for event details
+    status?: "success" | "failure" | "info" | "warning";
+    details: string;
     author?: string; // Footer text (e.g., name of the person responsible)
 }
 
@@ -40,7 +33,7 @@ type GroupedTimelineData = {
 
 function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'asc') {
     // Sort events by date
-    events.sort((a, b) => sortOrder === 'asc' 
+    events.sort((a, b) => sortOrder === 'asc'
         ? a.date.getTime() - b.date.getTime()
         : b.date.getTime() - a.date.getTime()
     );
@@ -63,7 +56,7 @@ function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'as
 
     const sortedGroupedData: GroupedTimelineData = {};
     const sortMonths = (a: string, b: string) =>
-        sortOrder === 'asc' 
+        sortOrder === 'asc'
             ? new Date(a).getTime() - new Date(b).getTime()
             : new Date(b).getTime() - new Date(a).getTime();
 
@@ -107,6 +100,9 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
             const row = createEl('div', { cls: 'row' });
 
             events.forEach(event => {
+                // Get all inline metadata from details
+                const metadata = extractInlineMetadata(event.details)
+
                 // Create timeline box for event
                 const col = createEl('div', { cls: 'col-sm-4' });
                 const box = createEl('div', { cls: 'timeline-box' });
@@ -114,60 +110,31 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
                 // Box title
                 const title = createEl('div', { cls: 'box-title' });
                 const titleLeft = createEl('div', { cls: 'box-title-left' });
-                if (event.icon) {
-                    const icon = createEl('i', { cls: `box-title-icon fa fa-${event.icon} ${event.status ?? ''}`, text: '' });
-                    titleLeft.appendChild(icon);
-                }
-                titleLeft.appendChild(document.createTextNode(event.title ? ` ${event.title}` : ''));
-                title.appendChild(titleLeft);
-
+                const icon = event.icon || metadata.icon ? createEl('i', { cls: `box-title-icon fa fa-${event.icon ?? metadata.icon} text-${event.status ?? (metadata.status ?? '')}`, text: '' }) : null;
                 const time = createEl('div', { cls: 'box-title-right', text: event.date.toTimeString().split(' ')[0] });
-                title.appendChild(time);
-
-                box.appendChild(title);
 
                 // Box content
                 const content = createEl('div', { cls: 'box-content' });
 
                 // Event details
-                if (typeof event.details == 'string') {
-                    event.details.split('\n').forEach((value, i, array) => {
-                        if (i == 0) {
-                            const header = isMarkdownHeader(value)
-                            const title = box.find(".box-title-left");
-                            if (header != null && title.textContent == '') {
-                                title.textContent = header;
-                                return;
-                            }
-                        } else if(i == array.length - 1){
-                            if(!event.author){
-                                const regex =  /^\[?author::? (.+?)\]?$/;
-                                const match = value.match(regex);
+                const sanifizedetails = sanitizeInlineMetadata(event.details);
+                const details = sanifizedetails.split('\n').filter(Boolean);
 
-                                if (match) {
-                                    event.author = match[1];
-                                    return;
-                                }
-                            }
-                        }
-                        const detail = createEl('p', { cls: 'box-item', text: value });
-                        content.appendChild(detail);
-                    });
-                } else {
-                    Object.entries(event.details).forEach(([key, value]) => {
-                        const detail = createEl('div', { cls: 'box-item', text: `${key}: ${value}` });
-                        content.appendChild(detail);
-                    });
-                }
+                const header = isMarkdownHeader(details[0]);
+                if (header) details.shift()
 
-                box.appendChild(content);
+                details.forEach(text => { content.appendChild(createEl('p', { cls: 'box-item', text })); });
 
                 // Box footer
-                if (event.author) {
-                    const footer = createEl('div', { cls: 'box-footer', text: event.author ? `- ${event.author}` : '' });
-                    box.appendChild(footer);
-                }
+                const footer = event.author || metadata.author ? createEl('div', { cls: 'box-footer', text: `- ${event.author ?? metadata.author}` }) : null;
 
+                if (icon) titleLeft.appendChild(icon)
+                titleLeft.appendChild(document.createTextNode(` ${event.title ?? (metadata.title ?? (header ?? ''))}`));
+                title.appendChild(titleLeft);
+                title.appendChild(time);
+                box.appendChild(title);
+                box.appendChild(content);
+                if (footer) box.appendChild(footer);
                 col.appendChild(box);
                 row.appendChild(col);
             });
