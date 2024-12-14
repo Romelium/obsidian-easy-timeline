@@ -1,4 +1,4 @@
-import { parse, parseDate } from 'chrono-node';
+import { parse, parseDate, strict } from 'chrono-node';
 import { App, getFrontMatterInfo, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { renderTimeline, TimelineData } from 'renderTimeline';
 import { extractVariedMetadata } from 'utils';
@@ -133,9 +133,15 @@ export default class EasyTimelinePlugin extends Plugin {
 			let { contentStart } = getFrontMatterInfo(text);
 			const sourceBlock = "```" + language + "\n" + source + "\n```";
 			const content = text.slice(contentStart).replace(sourceBlock, '');
-
+			
+			// Get and process all metadata from source block
+			const metadata = extractVariedMetadata(source);
+			const metadataReference = metadata.reference ? strict.parseDate(metadata.reference) : null;
+			let sort = { ascending: 'asc', descending: 'desc' }[metadata.sort.toLowerCase()] || metadata.sort;
+			sort = ((sort === 'asc' || sort === 'desc') ? sort : this.settings.sort);
+			
 			// find reference date in content
-			const reference = await this.findReference(file);
+			const reference = metadataReference ?? (await this.findReference(file));
 
 			// Get timeline object representation
 			const timeline = content
@@ -147,11 +153,6 @@ export default class EasyTimelinePlugin extends Plugin {
 					};
 				})
 				.filter(value => value.date != null) as TimelineData // Don't include lines with no valid dates
-
-			// Get and process all metadata from source block
-			let metadata = extractVariedMetadata(source);
-			let sort = { ascending: 'asc', descending: 'desc' }[metadata.sort.toLowerCase()] || metadata.sort;
-			sort = ((sort === 'asc' || sort === 'desc') ? sort : this.settings.sort);
 
 			// Render timeline
 			const timelineEl = renderTimeline(timeline, sort as "asc" | "desc");
