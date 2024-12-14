@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-easy-timeline",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "An Obsidian plugin to easily add timelines",
 	"main": "main.js",
 	"scripts": {
