@@ -1,94 +1,130 @@
-# Obsidian Sample Plugin
+# Easy Timeline
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+The **Easy Timeline** plugin for Obsidian allows you to create timelines easily. It’s inspired by the [historica plugin](https://github.com/nhannht/obsidian-historica), and it’s designed for those who need a simple way to visualize events over time. It allows references in properties to be used by relative dates.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## How to Use Basic
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+You want to turn this into a timeline
 
-## First time developing plugins?
+```md
+Today. Slow breakfast. Organized, felt good. Watched a space doc, had veggies and quinoa.
 
-Quick starting guide for new plugin devs:
+Tomorrow. Quick jog. Worked on a project. Dinner with friends.
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+Dec 31. Walked, reflected. Last-minute shopping. Celebrated with friends.
 
-## Releasing new releases
+Jan 1. Slept in, journaled. Walked, read. Quiet night, healthy meal, episodes.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
-
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
-
-## Adding your plugin to the community plugin list
-
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-## How to use
-
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint .\src\`
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+Jan 2. Made a plan. Caught up on emails, watched snow. Tried chili, read.
 ```
 
-If you have multiple URLs, you can also do:
+Creating a timeline is as easy as adding a simple block. Just use the following syntax:
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+````md
+```timeline
+```
+````
+
+That's all! The timeline block will automatically be processed, and each section will be defined by two new lines (or one in the settings).
+
+![basic](images/basic.png)
+
+### A Bit More
+
+#### Dates
+
+Each section's date is determined by the first valid date mentioned in the section. You can use various formats supported by [Chronos](https://github.com/wanasit/chrono), including:
+
+- **Relative Dates**:
+  - Today
+  - Tomorrow
+  - 5 days ago
+  - 2 weeks from now
+  - This Friday at 13:00
+
+- **Specific Dates**:
+  - 17 August 2013
+  - Sat Aug 17, 2013 18:40:39
+  - 2014-11-30T08:15:30
+
+Feel free to experiment with other date formats recognized by [Chronos](https://github.com/wanasit/chrono).
+
+#### Reference
+
+The relative dates (e.g. Today, Last week) will use the file created date as the reference by default but you can set it by having a 'created' property which the [Update Time](https://github.com/dsebastien/obsidian-update-time) is useful for. Use any valid [Chronos](https://github.com/wanasit/chrono) specific date format:
+
+```yaml
+created: 2018-12-14T18:56
 ```
 
-## API Documentation
+or
 
-See https://github.com/obsidianmd/obsidian-api
+```yaml
+created: 14 December 2018, at 6:56pm
+```
+
+#### Customize sections
+
+Customize sections using inline metadata for each sections such as author, icon, status, and title. The title metadata can be inferred from the heading. Icon use [fontawesome](https://fontawesome.com/v6/search?o=r&m=free). Status will change the color of the icon, the possible values are success, failure, warning, info. Like this:
+
+```md
+## Cool header
+A week ago, [author:: John Doe] did his [icon:: house] chores, so it is a [status:: success]. Looking forward to the next phase is exciting, but reflecting on the journey—from yesterday, through today, and into tomorrow—brings clarity and gratitude. 
+```
+
+![customized section](images/customized-section.png)
+
+If you don't want dataview to detect a inline metadata, just use a single colon (e.g. `[author: John Doe]` instead of `[author:: John Doe]`)
+
+### Settings
+
+- You can use a regex pattern to find which property to use by toggling the `Use Regex` setting. (e.g. set `(creat|ref)` in `Reference` setting)
+- You can set which property name or regex to be used to get the reference by the `Reference` setting.
+- The default sorting is ascending. You can set the default sorting of a timeline to be ascending or descending by the `Default Sorting` setting.
+- You can set if sections will be divided by a single line or double line by toggling the `Use Regex` setting.
+
+### Customizing the Source Block
+
+#### Explicit Reference
+
+To explicitly set the reference for a timeline block, you can include a `reference` field in the source. This will have the highest precedence. Use any valid [Chronos](https://github.com/wanasit/chrono) specific date format:
+
+````md
+```timeline
+reference: 2011 Oct 25
+```
+````
+
+or
+
+````md
+```timeline
+reference: 2011-10-25
+```
+````
+
+#### Explicit Sorting
+
+To explicitly set the sorting for a timeline block. you can include a `sort` field in the source. This will have the highest precedence.
+
+````md
+```timeline
+sort: asc
+```
+````
+
+or
+
+````md
+```timeline
+sort: dest
+```
+````
+
+or
+
+````md
+```timeline
+sort: Descending
+```
+````
