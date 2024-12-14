@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-easy-timeline",
 	"version": "1.0.2",
-	"description": "An Obsidian plugin to easily add timelines",
+	"description": "This simplifies creating and visualizing timelines from text using dates and metadata",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

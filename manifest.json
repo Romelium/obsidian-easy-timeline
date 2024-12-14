@@ -3,7 +3,7 @@
 	"name": "Easy Timeline",
 	"version": "1.0.2",
 	"minAppVersion": "0.15.0",
-	"description": "An Obsidian plugin to easily add timelines",
+	"description": "This simplifies creating and visualizing timelines from text using dates and metadata",
 	"author": "Romelium",
 	"authorUrl": "https://github.com/romelium",
 	"fundingUrl": "https://ko-fi.com/romelium",
