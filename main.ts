@@ -8,13 +8,15 @@ import { extractVariedMetadata } from 'utils';
 interface EasyTimelineSettings {
 	useRegex: boolean,
 	reference: string;
-	sort: 'asc' | 'desc'
+	sort: 'asc' | 'desc',
+	singleLine: boolean,
 }
 
 const DEFAULT_SETTINGS: EasyTimelineSettings = {
 	useRegex: false,
 	reference: 'created',
 	sort: 'asc',
+	singleLine: false,
 }
 
 export default class EasyTimelinePlugin extends Plugin {
@@ -30,7 +32,7 @@ export default class EasyTimelinePlugin extends Plugin {
 	async findReference(file: TFile): Promise<Date> {
 		// Default to file creation date. Note: It can easily change due to external causes like syncing
 		let ref = new Date(file.stat.ctime);
-		
+
 		let regex: RegExp | null = null;
 		// Check if regex is valid
 		if (this.settings.useRegex) {
@@ -133,19 +135,19 @@ export default class EasyTimelinePlugin extends Plugin {
 			let { contentStart } = getFrontMatterInfo(text);
 			const sourceBlock = "```" + language + "\n" + source + "\n```";
 			const content = text.slice(contentStart).replace(sourceBlock, '');
-			
+
 			// Get and process all metadata from source block
 			const metadata = extractVariedMetadata(source);
 			const metadataReference = metadata.reference ? strict.parseDate(metadata.reference) : null;
 			const metadataSort = metadata.sort ? { ascending: 'asc', descending: 'desc' }[metadata.sort.toLowerCase()] || metadata.sort : null;
 			const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
-			
+
 			// find reference date in content
 			const reference = metadataReference ?? (await this.findReference(file));
 
 			// Get timeline object representation
 			const timeline = content
-				.split('\n\n') // Split content into lines and process dates for each lines
+				.split(this.settings.singleLine ? '\n' : '\n\n') // Split content into lines and process dates for each lines
 				.map(line => {
 					return {
 						details: line.trim(),
@@ -155,7 +157,7 @@ export default class EasyTimelinePlugin extends Plugin {
 				.filter(value => value.date != null) as TimelineData // Don't include lines with no valid dates
 
 			// Render timeline
-			const timelineEl = renderTimeline(timeline, sort as "asc" | "desc");
+			const timelineEl = renderTimeline(timeline, sort as "asc" | "desc", );
 			el.replaceWith(timelineEl)
 		});
 	}
@@ -215,6 +217,18 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.sort)
 				.onChange(async (value) => {
 					this.plugin.settings.sort = value as 'asc' | 'desc';
+					await this.plugin.saveSettings();
+				})
+			);
+
+		// Setting for 'Use single line'
+		new Setting(containerEl)
+			.setName('Use single line')
+			.setDesc('If sections are seperated by single lines instead of double lines')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.singleLine)
+				.onChange(async (value) => {
+					this.plugin.settings.singleLine = value;
 					await this.plugin.saveSettings();
 				})
 			);
