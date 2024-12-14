@@ -37,7 +37,14 @@ type GroupedTimelineData = {
         [day: string]: TimelineEvent[];
     };
 };
-function groupTimelineData(events: TimelineData) {
+
+function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'asc') {
+    // Sort events by date
+    events.sort((a, b) => sortOrder === 'asc' 
+        ? a.date.getTime() - b.date.getTime()
+        : b.date.getTime() - a.date.getTime()
+    );
+
     const groupedData: GroupedTimelineData = {};
 
     events.forEach(event => {
@@ -45,30 +52,42 @@ function groupTimelineData(events: TimelineData) {
         const month = formatMonth(eventDate); // Group by "Month, Year"
         const day = formatDate(eventDate);   // Group by "Day, Date"
 
-        // Ensure the month exists
         if (!groupedData[month]) {
             groupedData[month] = {};
         }
-
-        // Ensure the day exists within the month
         if (!groupedData[month][day]) {
             groupedData[month][day] = [];
         }
-
-        // Add event to the corresponding group
         groupedData[month][day].push(event);
     });
 
-    return groupedData;
+    const sortedGroupedData: GroupedTimelineData = {};
+    const sortMonths = (a: string, b: string) =>
+        sortOrder === 'asc' 
+            ? new Date(a).getTime() - new Date(b).getTime()
+            : new Date(b).getTime() - new Date(a).getTime();
+
+    Object.keys(groupedData)
+        .sort(sortMonths)
+        .forEach(month => {
+            sortedGroupedData[month] = {};
+            Object.keys(groupedData[month])
+                .sort(sortMonths)
+                .forEach(day => {
+                    sortedGroupedData[month][day] = groupedData[month][day];
+                });
+        });
+
+    return sortedGroupedData;
 }
 
-export function renderTimeline(timelineData: TimelineData) {
+export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'desc' = 'asc') {
     const container = createEl('div', { cls: 'container' });
     const timeline = createEl('div', { cls: 'timeline' });
     container.appendChild(timeline);
 
     // Process the timeline data
-    const groupedData = groupTimelineData(timelineData);
+    const groupedData = groupTimelineData(timelineData, sortOrder);
 
     Object.entries(groupedData).forEach(([month, days]) => {
         // Create month header

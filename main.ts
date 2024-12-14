@@ -2,17 +2,20 @@ import { parse, parseDate } from 'chrono-node';
 import { App, getFrontMatterInfo, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { renderTimeline, TimelineData } from 'renderTimeline';
 import { sampleTimelineData } from 'sampleTimelineData';
+import { extractVariedMetadata } from 'utils';
 
 // Remember to rename these classes and interfaces!
 
 interface EasyTimelineSettings {
 	useRegex: boolean,
 	reference: string;
+	sort: 'asc' | 'desc'
 }
 
 const DEFAULT_SETTINGS: EasyTimelineSettings = {
 	useRegex: false,
-	reference: 'created'
+	reference: 'created',
+	sort: 'asc',
 }
 
 export default class EasyTimelinePlugin extends Plugin {
@@ -148,11 +151,15 @@ export default class EasyTimelinePlugin extends Plugin {
 						date: parseDate(line, reference)
 					};
 				})
-				.filter(value => value.date != null) // Don't include lines with no valid dates
-				.sort(value => -value.date!.valueOf()) as TimelineData; // Sort decending by the first date mentioned
+				.filter(value => value.date != null) as TimelineData // Don't include lines with no valid dates
+
+			// Get and process all metadata from source block
+			let metadata = extractVariedMetadata(source);
+			let sort = { ascending: 'asc', descending: 'desc' }[metadata.sort.toLowerCase()] || metadata.sort;
+			sort = ((sort === 'asc' || sort === 'desc') ? sort : this.settings.sort);
 
 			// Render timeline
-			const timelineEl = renderTimeline(timeline);
+			const timelineEl = renderTimeline(timeline, sort as "asc" | "desc");
 			el.replaceWith(timelineEl)
 		});
 	}
@@ -200,6 +207,18 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.reference)
 				.onChange(async (value) => {
 					this.plugin.settings.reference = value;
+					await this.plugin.saveSettings();
+				})
+			);
+
+		// Setting for 'Default Sorting'
+		new Setting(containerEl)
+			.setName('Default Sorting')
+			.setDesc('The sorting to be used if not specified in source block')
+			.addDropdown(toggle => toggle.addOptions({ asc: 'Ascending', desc: ' Descending' })
+				.setValue(this.plugin.settings.sort)
+				.onChange(async (value) => {
+					this.plugin.settings.sort = value as 'asc' | 'desc';
 					await this.plugin.saveSettings();
 				})
 			);
