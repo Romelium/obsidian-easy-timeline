@@ -64,14 +64,14 @@ export default class EasyTimelinePlugin extends Plugin {
 					}
 				}
 
-				if (!found) console.log('No matching property');
-				else if (!refProp) console.log('Invalid reference');
+				// if (!found) console.log('No matching property');
+				if (found && !refProp) console.log('Invalid reference');
 			} else {
 				// Check for a direct reference property
 				if (frontmatter[this.settings.reference]) {
 					refProp = parseDateValue(frontmatter[this.settings.reference]);
 				} else {
-					console.log('No matching property');
+					// console.log('No matching property');
 				}
 			}
 
