@@ -1,7 +1,6 @@
 import { parse, parseDate } from 'chrono-node';
 import { App, getFrontMatterInfo, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { renderTimeline, TimelineData } from 'renderTimeline';
-import { sampleTimelineData } from 'sampleTimelineData';
 import { extractVariedMetadata } from 'utils';
 
 // Remember to rename these classes and interfaces!
