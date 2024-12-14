@@ -137,8 +137,8 @@ export default class EasyTimelinePlugin extends Plugin {
 			// Get and process all metadata from source block
 			const metadata = extractVariedMetadata(source);
 			const metadataReference = metadata.reference ? strict.parseDate(metadata.reference) : null;
-			let sort = { ascending: 'asc', descending: 'desc' }[metadata.sort.toLowerCase()] || metadata.sort;
-			sort = ((sort === 'asc' || sort === 'desc') ? sort : this.settings.sort);
+			const metadataSort = metadata.sort ? { ascending: 'asc', descending: 'desc' }[metadata.sort.toLowerCase()] || metadata.sort : null;
+			const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
 			
 			// find reference date in content
 			const reference = metadataReference ?? (await this.findReference(file));
