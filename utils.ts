@@ -16,14 +16,14 @@ export function isMarkdownHeader(str: string) {
 
 // Sanitize all inline metadata to just be the value
 export function sanitizeInlineMetadata(input: string) {
-    const regex = /\[[^\[\]]+::\s*([^\[\]]+)\]/g;
+    const regex = /\[[^\[\]]+::?\s*([^\[\]]+)\]/g;
     return input.replace(regex, '$1');
 }
 
 // Get all inline metadata same as https://blacksmithgu.github.io/obsidian-dataview/annotation/add-metadata/
 export function extractInlineMetadata(input: string) {
     // Define regex to match the pattern [ID:: Value]
-    const regex = /\[([^\[\]]+)::\s([^\[\]]+)\]/g;
+    const regex = /\[([^\[\]]+)::?\s*([^\[\]]+)\]/g;
     const matches: Record<string, string> = {};
     let match;
 
@@ -45,7 +45,7 @@ export function extractInlineMetadata(input: string) {
 }
 // Does what extractInlineMetadata does but allows without brackets and only one colon. Of course you wouldn't want to use this to extract inline metadata in a normal paragraph
 export function extractVariedMetadata(input: string) {
-    const regex = /(?:\[(\w+)\s*::\s*([^\[\]]+)\]|\b(\w+)\s*:\s*([^\[\]]+)\b)/g;
+    const regex = /(?:\[(\w+)\s*::?\s*([^\[\]]+)\]|\b(\w+)\s*:\s*([^\[\]]+)\b)/g;
     const matches: Record<string, string> = {};
     
     // Split input into lines
