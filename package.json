@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-easy-timeline",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "Simplifies creating and visualizing timelines from text using dates and metadata",
 	"main": "main.js",
 	"scripts": {
