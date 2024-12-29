@@ -164,7 +164,7 @@
     font-style: italic;
 }
 
-.box-title-icon {
+.box-title-icon svg {
     display: block;
     margin: auto;
     margin-right: 5px;

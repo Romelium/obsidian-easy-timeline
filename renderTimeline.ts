@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '@fortawesome/fontawesome-free/js/all.min.js';
 import { extractInlineMetadata, isMarkdownHeader, sanitizeInlineMetadata } from 'utils';
+import { setIcon } from 'obsidian';
 
 export interface TimelineEvent {
     date: Date;
@@ -110,7 +110,9 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
                 // Box title
                 const title = createEl('div', { cls: 'box-title' });
                 const titleLeft = createEl('div', { cls: 'box-title-left' });
-                const icon = event.icon || metadata.icon ? createEl('i', { cls: `box-title-icon fa fa-${event.icon ?? metadata.icon} text-${event.status ?? (metadata.status ?? '')}`, text: '' }) : null;
+                const icon = event.icon || metadata.icon ? createEl('i', { cls: `box-title-icon text-${event.status ?? (metadata.status ?? '')}`, text: '' }) : null;
+                if (icon)
+                    setIcon(icon, event.icon || metadata.icon);
                 const time = createEl('div', { cls: 'box-title-right', text: event.date.toTimeString().split(' ')[0] });
 
                 // Box content
