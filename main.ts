@@ -174,9 +174,9 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 				})
 			);
 
-		// Setting for 'Default Sorting'
+		// Setting for 'Sorting'
 		new Setting(containerEl)
-			.setName('Default Sorting')
+			.setName('Sorting')
 			.setDesc('The sorting to be used if not specified in source block')
 			.addDropdown(toggle => toggle.addOptions({ asc: 'Ascending', desc: ' Descending' })
 				.setValue(this.plugin.settings.sort)
