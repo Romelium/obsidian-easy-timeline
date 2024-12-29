@@ -1,7 +1,7 @@
 {
 	"id": "easy-timeline",
 	"name": "Easy Timeline",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"minAppVersion": "0.15.0",
 	"description": "Simplifies creating and visualizing timelines from text using dates and metadata",
 	"author": "Romelium",
