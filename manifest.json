@@ -3,7 +3,7 @@
 	"name": "Easy Timeline",
 	"version": "1.0.3",
 	"minAppVersion": "0.15.0",
-	"description": "This simplifies creating and visualizing timelines from text using dates and metadata",
+	"description": "Simplifies creating and visualizing timelines from text using dates and metadata",
 	"author": "Romelium",
 	"authorUrl": "https://github.com/romelium",
 	"fundingUrl": "https://ko-fi.com/romelium",
