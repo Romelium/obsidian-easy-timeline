@@ -3,8 +3,6 @@ import { App, getFrontMatterInfo, Notice, Plugin, PluginSettingTab, Setting, TFi
 import { renderTimeline, TimelineData } from 'renderTimeline';
 import { extractVariedMetadata } from 'utils';
 
-// Remember to rename these classes and interfaces!
-
 interface EasyTimelineSettings {
 	useRegex: boolean,
 	reference: string;
