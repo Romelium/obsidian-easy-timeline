@@ -1,6 +1,6 @@
 import { parse, parseDate, strict } from 'chrono-node';
 import { App, getFrontMatterInfo, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
-import { renderTimeline, TimelineData } from 'renderTimeline';
+import { renderTimeline, TimelineData } from 'src/renderTimeline';
 import { extractVariedMetadata } from 'utils';
 
 interface EasyTimelineSettings {
