@@ -75,7 +75,7 @@ export default class EasyTimelinePlugin extends Plugin {
 
 			// Use the found reference or fallback to file creation date
 			if (refProp) ref = refProp;
-			else console.log('Using file created timestamp');
+			// else console.log('Using file created timestamp');
 		});
 
 		return ref;
