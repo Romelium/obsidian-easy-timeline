@@ -31,6 +31,41 @@ That's all! The timeline block will automatically be processed, and each section
 
 ### A Bit More
 
+#### Block Content
+
+You can either format it this way, where the timeline block renders content using the text outside the block:  
+
+````md
+Today. Slow breakfast. Organized, felt good. Watched a space doc, had veggies and quinoa.
+
+Tomorrow. Quick jog. Worked on a project. Dinner with friends.
+
+Dec 31. Walked, reflected. Last-minute shopping. Celebrated with friends.
+
+Jan 1. Slept in, journaled. Walked, read. Quiet night, healthy meal, episodes.
+
+Jan 2. Made a plan. Caught up on emails, watched snow. Tried chili, read.
+
+```timeline
+```
+````
+
+Or, you can format it this way, by placing the content inside the block. However, this approach does not allow you to use [explicit settings](#customizing-the-source-block):  
+
+````md
+```timeline
+Today. Slow breakfast. Organized, felt good. Watched a space doc, had veggies and quinoa.
+
+Tomorrow. Quick jog. Worked on a project. Dinner with friends.
+
+Dec 31. Walked, reflected. Last-minute shopping. Celebrated with friends.
+
+Jan 1. Slept in, journaled. Walked, read. Quiet night, healthy meal, episodes.
+
+Jan 2. Made a plan. Caught up on emails, watched snow. Tried chili, read.
+```
+````
+
 #### Dates
 
 Each section's date is determined by the first valid date mentioned in the section. You can use various formats supported by [Chronos](https://github.com/wanasit/chrono), including:
