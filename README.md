@@ -164,6 +164,12 @@ sort: Descending
 ```
 ````
 
+## Issues, Bugs, and Feature Requests
+
+If you’ve found a bug, have an idea for a feature, or want to share feedback, please let me know by [opening an issue](https://github.com/Romelium/obsidian-easy-timeline/issues).
+
+I’ll do my best to get back to you quickly.
+
 ## Funding
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N317DZDN)
