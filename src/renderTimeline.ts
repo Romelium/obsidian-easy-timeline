@@ -68,7 +68,8 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
     Object.entries(groupedData).forEach(([month, days]) => {
         // Create month header
         const monthHeader = createEl('div', { cls: 'timeline-month', text: month });
-        const entryCount = createEl('span', { text: `${Object.keys(days).length} Entries` });
+        const totalEvents = Object.values(days).reduce((acc, curr) => acc + curr.length, 0);
+        const entryCount = createEl('span', { text: `${totalEvents} Entries` });
         monthHeader.appendChild(entryCount);
         timeline.appendChild(monthHeader);
 
@@ -105,7 +106,7 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
 
                 // Event details
                 const sanifizedetails = sanitizeInlineMetadata(event.details);
-                const details = sanifizedetails.split('\n').filter(Boolean);
+                const details = sanifizedetails.split(/\r?\n/).filter(Boolean);
 
                 const header = isMarkdownHeader(details[0]);
                 if (header) details.shift()

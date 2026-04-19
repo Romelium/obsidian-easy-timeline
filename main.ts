@@ -105,29 +105,31 @@ export default class EasyTimelinePlugin extends Plugin {
 			const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
 
 			// Determine if source block is only metadata
-			const isSourceMetadataOnly = source.trim() === '' || source.split('\n').every(line => {
+			const isSourceMetadataOnly = source.trim() === '' || source.split(/\r?\n/).every(line => {
 				const trimmed = line.trim();
 				return trimmed === '' || /^(?:\[?(?:sort|reference)\s*::?\s*([^\[\]]+)\]?|(?:sort|reference)\s*:\s*(.+))$/i.test(trimmed);
 			});
 
 			let contentToParse = "";
 			if (!isSourceMetadataOnly) {
-				contentToParse = source.split('\n').filter(line => {
+				contentToParse = source.split(/\r?\n/).filter(line => {
 					const trimmed = line.trim();
 					return !/^(?:\[?(?:sort|reference)\s*::?\s*([^\[\]]+)\]?|(?:sort|reference)\s*:\s*(.+))$/i.test(trimmed);
 				}).join('\n');
 			} else {
 				const sectionInfo = ctx.getSectionInfo(el);
 				if (sectionInfo) {
-					const lines = text.split('\n');
+					const lines = text.split(/\r?\n/);
 					lines.splice(sectionInfo.lineStart, sectionInfo.lineEnd - sectionInfo.lineStart + 1);
 					const textWithoutBlock = lines.join('\n');
 					const { contentStart } = getFrontMatterInfo(textWithoutBlock);
 					contentToParse = textWithoutBlock.slice(contentStart);
 				} else {
 					const { contentStart } = getFrontMatterInfo(text);
-					const sourceBlock = "```" + language + "\n" + source + "\n```";
-					contentToParse = text.slice(contentStart).replace(sourceBlock, '');
+					const normalizedSource = source.replace(/\r\n/g, '\n');
+					const escapedSource = normalizedSource.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\n/g, '(?:[ \\t]*)\\r?\\n');
+					const sourceBlockRegex = new RegExp("```" + language + "(?:[ \\t]*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "```");
+					contentToParse = text.slice(contentStart).replace(sourceBlockRegex, '');
 				}
 			}
 
@@ -136,7 +138,7 @@ export default class EasyTimelinePlugin extends Plugin {
 
 			// Get timeline object representation
 			const timeline = contentToParse
-				.split(this.settings.singleLine ? '\n' : '\n\n') // Split content into lines and process dates for each lines
+				.split(this.settings.singleLine ? /\r?\n/ : /(?:\r?\n){2,}/) // Split content into lines and process dates for each lines
 				.map(line => {
 					return {
 						details: line.trim(),
@@ -202,7 +204,7 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName('Sorting')
 			.setDesc('The sorting to be used if not specified in source block')
-			.addDropdown(toggle => toggle.addOptions({ asc: 'Ascending', desc: ' Descending' })
+			.addDropdown(toggle => toggle.addOptions({ asc: 'Ascending', desc: 'Descending' })
 				.setValue(this.plugin.settings.sort)
 				.onChange(async (value) => {
 					this.plugin.settings.sort = value as 'asc' | 'desc';
@@ -213,7 +215,7 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 		// Setting for 'Use single line'
 		new Setting(containerEl)
 			.setName('Use single line')
-			.setDesc('If sections are seperated by single lines instead of double lines')
+			.setDesc('If sections are separated by single lines instead of double lines')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.singleLine)
 				.onChange(async (value) => {

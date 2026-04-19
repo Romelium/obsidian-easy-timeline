@@ -8,7 +8,7 @@ export function isMarkdownHeader(str: string | undefined) {
 
     if (match) {
         // If it's a header, match[2] contains the header text
-        return match[2]; // Return the header text
+        return match[2].trim(); // Return the header text
     } else {
         // If it's not a header, return null
         return null;
@@ -50,7 +50,7 @@ export function extractVariedMetadata(input: string) {
     const matches: Record<string, string> = {};
     
     // Split input into lines
-    const lines = input.split('\n');
+    const lines = input.split(/\r?\n/);
 
     // Process each line separately
     lines.forEach(line => {
