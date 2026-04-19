@@ -58,7 +58,7 @@ function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'as
 }
 
 export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'desc' = 'asc') {
-    const container = createEl('div', { cls: 'container' });
+    const container = createEl('div', { cls: 'easy-timeline-container' });
     const timeline = createEl('div', { cls: 'timeline' });
     container.appendChild(timeline);
 

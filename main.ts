@@ -94,12 +94,27 @@ export default class EasyTimelinePlugin extends Plugin {
 		const language = 'timeline';
 		this.registerMarkdownCodeBlockProcessor(language, async (source, el, ctx) => {
 			const sourcePath = ctx.sourcePath;
-			const file = this.app.vault.getAbstractFileByPath(sourcePath);
+			let file = this.app.vault.getAbstractFileByPath(sourcePath);
 			if (!(file instanceof TFile)) return;
+
+			let actualFile = file;
+			const embedNode = el.closest('.internal-embed, .markdown-embed');
+			if (embedNode) {
+				const src = embedNode.getAttribute('src');
+				if (src) {
+					const linkpath = src.split('#')[0];
+					if (linkpath) {
+						const targetFile = this.app.metadataCache.getFirstLinkpathDest(linkpath, sourcePath);
+						if (targetFile) {
+							actualFile = targetFile;
+						}
+					}
+				}
+			}
 
 			const render = async (currentText?: string) => {
 				const sectionInfo = ctx.getSectionInfo(el);
-				const text = currentText ?? sectionInfo?.text ?? await this.app.vault.cachedRead(file);
+				const text = currentText ?? sectionInfo?.text ?? await this.app.vault.cachedRead(actualFile);
 
 				let languageLineMetadata: Record<string, string> = {};
 				if (sectionInfo) {
@@ -145,7 +160,7 @@ export default class EasyTimelinePlugin extends Plugin {
 						const { contentStart } = getFrontMatterInfo(text);
 						const normalizedSource = source.replace(/\r\n/g, '\n');
 						const escapedSource = normalizedSource.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\n/g, '(?:[ \\t]*)\\r?\\n');
-						const sourceBlockRegex = new RegExp("(`{3,}|~{3,})" + language + "(?:[ \\t]*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "\\1", "g");
+						const sourceBlockRegex = new RegExp("(`{3,}|~{3,})" + language + "(?:.*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "\\1", "g");
 						contentToParse = text.slice(contentStart).replace(sourceBlockRegex, '');
 					}
 
@@ -177,7 +192,7 @@ export default class EasyTimelinePlugin extends Plugin {
 				const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
 
 				// find reference date in content
-				const reference = metadataReference ?? (await this.findReference(file));
+				const reference = metadataReference ?? (await this.findReference(actualFile));
 
 				// Get timeline object representation
 				const timeline = contentToParse
@@ -198,7 +213,7 @@ export default class EasyTimelinePlugin extends Plugin {
 
 			await render();
 
-			const renderChild = new TimelineRenderChild(el, this, sourcePath, render);
+			const renderChild = new TimelineRenderChild(el, this, actualFile.path, render);
 			ctx.addChild(renderChild);
 		});
 
