@@ -7,8 +7,6 @@ The **Easy Timeline** plugin for Obsidian allows you to create timelines easily.
 You want to turn this into a timeline
 
 ```md
-Today. Slow breakfast. Organized, felt good. Watched a space doc, had veggies and quinoa.
-
 Tomorrow. Quick jog. Worked on a project. Dinner with friends.
 
 Dec 31. Walked, reflected. Last-minute shopping. Celebrated with friends.
@@ -104,7 +102,9 @@ Customize sections using inline metadata for each sections such as author, icon,
 
 ```md
 ## Cool header
-A week ago, [author:: John Doe] did his [icon:: house] chores, so it is a [status:: success]. Looking forward to the next phase is exciting, but reflecting on the journey—from yesterday, through today, and into tomorrow—brings clarity and gratitude. 
+A week ago, [author:: John Doe] did his [icon:: house] chores, so it is a [status:: success]. Looking forward to the next phase is exciting, but reflecting on the journey—from yesterday, through today, and into tomorrow—brings clarity and gratitude.
+
+2024-12-10. [title:: Deployment Failed] [status:: failure] [icon:: bug] [author:: QA Lead] Critical bug found in production.
 ```
 
 ![customized section](images/customized-section.png)
