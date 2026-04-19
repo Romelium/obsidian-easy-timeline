@@ -102,9 +102,15 @@ Customize sections using inline metadata for each sections such as author, icon,
 
 ```md
 ## Cool header
-A week ago, [author:: John Doe] did his [icon:: house] chores, so it is a [status:: success]. Looking forward to the next phase is exciting, but reflecting on the journey—from yesterday, through today, and into tomorrow—brings clarity and gratitude.
+A week ago, [author:: John Doe] did his [icon:: house] chores, so it is a [status:: success]. Looking forward to the next phase is exciting, but reflecting on the journey—from *yesterday*, through **today**, and into ___tomorrow___—brings clarity ~~and gratitude~~.
 
 2024-12-10. [title:: Deployment Failed] [status:: failure] [icon:: bug] [author:: QA Lead] Critical bug found in production.
+- **Relative Dates**: 
+  - Today
+  - ==Tomorrow==
+  - 5 days <sup>ago</sup>
+  - 2 weeks from now
+  - This Friday at _13:00_
 ```
 
 ![customized section](images/customized-section.png)

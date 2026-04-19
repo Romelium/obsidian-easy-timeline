@@ -1,5 +1,5 @@
 import { parseDate, strict } from 'chrono-node';
-import { App, debounce, Editor, getFrontMatterInfo, MarkdownRenderChild, MarkdownView, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { App, Component, debounce, Editor, getFrontMatterInfo, MarkdownRenderChild, MarkdownView, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { renderTimeline, TimelineData } from 'src/renderTimeline';
 import { extractVariedMetadata, extractInlineMetadata } from 'utils';
 
@@ -112,6 +112,12 @@ export default class EasyTimelinePlugin extends Plugin {
 				}
 			}
 
+			const renderChild = new TimelineRenderChild(el, this, actualFile.path, async () => {});
+			ctx.addChild(renderChild);
+
+			let markdownComponent = new Component();
+			renderChild.addChild(markdownComponent);
+
 			const render = async (currentText?: string) => {
 				const sectionInfo = ctx.getSectionInfo(el);
 				const text = currentText ?? sectionInfo?.text ?? await this.app.vault.cachedRead(actualFile);
@@ -205,16 +211,19 @@ export default class EasyTimelinePlugin extends Plugin {
 					})
 					.filter(value => value.date != null) as TimelineData; // Don't include lines with no valid dates
 
+				markdownComponent.unload();
+				renderChild.removeChild(markdownComponent);
+				markdownComponent = new Component();
+				renderChild.addChild(markdownComponent);
+
 				// Render timeline
-				const timelineEl = renderTimeline(timeline, sort as "asc" | "desc");
+				const timelineEl = await renderTimeline(timeline, sort as "asc" | "desc", actualFile.path, markdownComponent);
 				el.empty();
 				el.appendChild(timelineEl);
 			};
+			renderChild.renderFn = render;
 
 			await render();
-
-			const renderChild = new TimelineRenderChild(el, this, actualFile.path, render);
-			ctx.addChild(renderChild);
 		});
 
 		const debouncedEditorChange = debounce((editor: Editor, info: MarkdownView | any) => {

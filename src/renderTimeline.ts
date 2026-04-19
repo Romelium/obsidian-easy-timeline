@@ -1,6 +1,5 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { extractInlineMetadata, isMarkdownHeader, sanitizeInlineMetadata } from 'utils';
-import { setIcon } from 'obsidian';
+import { Component, MarkdownRenderer, setIcon } from 'obsidian';
 
 export interface TimelineEvent {
     date: Date;
@@ -57,7 +56,7 @@ function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'as
     return groupedData;
 }
 
-export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'desc' = 'asc') {
+export async function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'desc' = 'asc', sourcePath: string, component: Component) {
     const container = createEl('div', { cls: 'easy-timeline-container' });
     const timeline = createEl('div', { cls: 'timeline' });
     container.appendChild(timeline);
@@ -65,7 +64,7 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
     // Process the timeline data
     const groupedData = groupTimelineData(timelineData, sortOrder);
 
-    Object.entries(groupedData).forEach(([month, days]) => {
+    for (const [month, days] of Object.entries(groupedData)) {
         // Create month header
         const monthHeader = createEl('div', { cls: 'timeline-month', text: month });
         const totalEvents = Object.values(days).reduce((acc, curr) => acc + curr.length, 0);
@@ -74,21 +73,21 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
         timeline.appendChild(monthHeader);
 
         // Iterate through each day within the month
-        Object.entries(days).forEach(([day, events]) => {
+        for (const [day, events] of Object.entries(days)) {
             // Create date section
             const section = createEl('div', { cls: 'timeline-section' });
             const dateHeader = createEl('div', { cls: 'timeline-date', text: day });
             section.appendChild(dateHeader);
 
             // Create a row for events
-            const row = createEl('div', { cls: 'row' });
+            const row = createEl('div', { cls: 'timeline-row' });
 
-            events.forEach(event => {
+            for (const event of events) {
                 // Get all inline metadata from details
                 const metadata = extractInlineMetadata(event.details)
 
                 // Create timeline box for event
-                const col = createEl('div', { cls: 'col-sm-4' });
+                const col = createEl('div', { cls: 'timeline-col' });
                 const box = createEl('div', { cls: 'timeline-box' });
 
                 // Box title
@@ -111,13 +110,16 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
                 const header = isMarkdownHeader(details[0]);
                 if (header) details.shift()
 
-                details.forEach(text => { content.appendChild(createEl('p', { cls: 'box-item', text })); });
+                const markdownText = details.join('\n');
+                const markdownContainer = createEl('div', { cls: 'box-item markdown-rendered' });
+                await MarkdownRenderer.renderMarkdown(markdownText, markdownContainer, sourcePath, component);
+                content.appendChild(markdownContainer);
 
                 // Box footer
                 const footer = event.author || metadata.author ? createEl('div', { cls: 'box-footer', text: `- ${event.author ?? metadata.author}` }) : null;
 
-                if (icon) titleLeft.appendChild(icon)
-                titleLeft.appendChild(document.createTextNode(` ${event.title ?? (metadata.title ?? (header ?? ''))}`));
+                if (icon) titleLeft.appendChild(icon);
+                titleLeft.createSpan({ text: event.title ?? (metadata.title ?? (header ?? '')) });
                 title.appendChild(titleLeft);
                 title.appendChild(time);
                 box.appendChild(title);
@@ -125,12 +127,12 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
                 if (footer) box.appendChild(footer);
                 col.appendChild(box);
                 row.appendChild(col);
-            });
+            }
 
             section.appendChild(row);
             timeline.appendChild(section);
-        });
-    });
+        }
+    }
 
     return container;
 }
