@@ -1,12 +1,13 @@
 .timeline {
     position: relative;
+    padding-bottom: 15px;
 }
 
 .timeline:before {
     position: absolute;
     content: "";
     width: 4px;
-    height: calc(100% + 15px);
+    height: calc(100% - 10px);
     background: rgb(138, 145, 150);
     background: -moz-linear-gradient(left,
             rgba(138, 145, 150, 1) 0%,
@@ -24,6 +25,21 @@
     left: 14px;
     top: 5px;
     border-radius: 4px;
+}
+
+.timeline:after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(to bottom,
+            rgba(138, 145, 150, 1) 0%,
+            rgba(122, 130, 136, 1) 60%,
+            rgba(112, 120, 125, 1) 100%);
+    top: calc(100% - 15px);
+    left: 11px;
+    border: 1px solid #17191b;
+    border-radius: 100%;
 }
 
 .timeline-month {
