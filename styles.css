@@ -6,7 +6,7 @@
     position: absolute;
     content: "";
     width: 4px;
-    height: calc(100% + 50px);
+    height: calc(100% + 15px);
     background: rgb(138, 145, 150);
     background: -moz-linear-gradient(left,
             rgba(138, 145, 150, 1) 0%,
@@ -35,7 +35,7 @@
     border-radius: 40px;
     border: 1px solid #17191b;
     border-right-color: black;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
 }
 
 .timeline-month span {
@@ -81,11 +81,11 @@
     padding-left: 35px;
     display: block;
     position: relative;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
 }
 
 .timeline-date {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     padding: 2px 15px;
     background: linear-gradient(#74cae3, #5bc0de 60%, #4ab9db);
     position: relative;
@@ -122,7 +122,7 @@
 }
 
 .timeline-section .col-sm-4 {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .timeline-box {
@@ -132,6 +132,7 @@
     border-radius: 15px;
     border-top-left-radius: 0px;
     border-bottom-right-radius: 0px;
+    padding-bottom: 0.25rem;
     border: 1px solid #444950;
     transition: all 0.3s ease;
     overflow: hidden;
@@ -171,7 +172,7 @@
 }
 
 .box-content {
-    padding: 5px 15px;
+    padding: 0px 15px;
     background-color: #17191b;
     /* border: 1px solid #444950;
 	box-shadow: 0 4px 4px 0 #444950; */
@@ -184,12 +185,13 @@
 }
 
 .box-item {
-    margin-bottom: 5px;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0px !important;
 }
 
 .box-footer {
     background-color: #17191b;
-    padding: 5px 15px;
+    padding: 0px 15px;
     text-align: right;
     font-style: italic;
 }
