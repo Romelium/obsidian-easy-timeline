@@ -1,4 +1,5 @@
-export function isMarkdownHeader(str: string) {
+export function isMarkdownHeader(str: string | undefined) {
+    if (!str) return null;
     // Regex to match Markdown header (one or more # followed by a space and text)
     const regex = /^(#+)\s+(.*)$/;
 
@@ -45,7 +46,7 @@ export function extractInlineMetadata(input: string) {
 }
 // Does what extractInlineMetadata does but allows without brackets and only one colon. Of course you wouldn't want to use this to extract inline metadata in a normal paragraph
 export function extractVariedMetadata(input: string) {
-    const regex = /(?:\[(\w+)\s*::?\s*([^\[\]]+)\]|\b(\w+)\s*:\s*([^\[\]]+)\b)/g;
+    const regex = /^(?:\[([a-zA-Z0-9_-]+)\s*::?\s*([^\[\]]+)\]|([a-zA-Z0-9_-]+)\s*:\s*(.+))$/;
     const matches: Record<string, string> = {};
     
     // Split input into lines
@@ -53,12 +54,10 @@ export function extractVariedMetadata(input: string) {
 
     // Process each line separately
     lines.forEach(line => {
-        let match;
-        // Apply regex to the current line
-        while ((match = regex.exec(line)) !== null) {
-            // Check if it's a bracketed or non-bracketed match
-            const originalId = match[1] || match[3]; // Get ID from bracketed or non-bracketed part
-            const value = match[2] || match[4]; // Get the value
+        const match = regex.exec(line.trim());
+        if (match) {
+            const originalId = match[1] || match[3];
+            const value = match[2] || match[4];
 
             // Sanitize the ID to lower kebab case
             const sanitizedId = originalId
@@ -66,8 +65,7 @@ export function extractVariedMetadata(input: string) {
                 .replace(/\s+/g, '-') // Replace spaces with hyphens
                 .replace(/[^a-z0-9-]/g, ''); // Remove any non-alphanumeric characters except hyphens
             
-            // Push the sanitized match
-            matches[sanitizedId] = value.trim() // Trim any excess spaces from the value
+            matches[sanitizedId] = value.trim();
         }
     });
 

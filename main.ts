@@ -42,7 +42,10 @@ export default class EasyTimelinePlugin extends Plugin {
 		}
 
 		// Process frontmatter to find reference
-		await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+		const cache = this.app.metadataCache.getFileCache(file);
+		const frontmatter = cache?.frontmatter;
+
+		if (frontmatter) {
 			let refProp = null;
 
 			// Parse date using the reference or default value. 
@@ -62,21 +65,19 @@ export default class EasyTimelinePlugin extends Plugin {
 					}
 				}
 
-				// if (!found) console.log('No matching property');
 				if (found && !refProp) console.log('Invalid reference');
 			} else {
 				// Check for a direct reference property
 				if (frontmatter[this.settings.reference]) {
-					refProp = parseDateValue(frontmatter[this.settings.reference]);
-				} else {
-					// console.log('No matching property');
+					if (typeof frontmatter[this.settings.reference] === 'string') {
+						refProp = parseDateValue(frontmatter[this.settings.reference]);
+					}
 				}
 			}
 
 			// Use the found reference or fallback to file creation date
 			if (refProp) ref = refProp;
-			// else console.log('Using file created timestamp');
-		});
+		}
 
 		return ref;
 	}
@@ -99,19 +100,42 @@ export default class EasyTimelinePlugin extends Plugin {
 			// Get and process all metadata from source block
 			const metadata = extractVariedMetadata(source);
 			const metadataReference = metadata.reference ? strict.parseDate(metadata.reference) : null;
-			const metadataSort = metadata.sort ? { ascending: 'asc', descending: 'desc' }[metadata.sort.toLowerCase()] || metadata.sort : null;
+			const metadataSortRaw = metadata.sort?.toLowerCase();
+			const metadataSort = metadataSortRaw ? { ascending: 'asc', descending: 'desc' }[metadataSortRaw] || metadataSortRaw : null;
 			const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
 
-			// Remove frontmatter and source block from file content
-			let { contentStart } = getFrontMatterInfo(text);
-			const sourceBlock = "```" + language + "\n" + source + "\n```";
-			const content = source.length != 0 && Object.keys(metadata).length === 0 ? source : text;
+			// Determine if source block is only metadata
+			const isSourceMetadataOnly = source.trim() === '' || source.split('\n').every(line => {
+				const trimmed = line.trim();
+				return trimmed === '' || /^(?:\[?(?:sort|reference)\s*::?\s*([^\[\]]+)\]?|(?:sort|reference)\s*:\s*(.+))$/i.test(trimmed);
+			});
+
+			let contentToParse = "";
+			if (!isSourceMetadataOnly) {
+				contentToParse = source.split('\n').filter(line => {
+					const trimmed = line.trim();
+					return !/^(?:\[?(?:sort|reference)\s*::?\s*([^\[\]]+)\]?|(?:sort|reference)\s*:\s*(.+))$/i.test(trimmed);
+				}).join('\n');
+			} else {
+				const sectionInfo = ctx.getSectionInfo(el);
+				if (sectionInfo) {
+					const lines = text.split('\n');
+					lines.splice(sectionInfo.lineStart, sectionInfo.lineEnd - sectionInfo.lineStart + 1);
+					const textWithoutBlock = lines.join('\n');
+					const { contentStart } = getFrontMatterInfo(textWithoutBlock);
+					contentToParse = textWithoutBlock.slice(contentStart);
+				} else {
+					const { contentStart } = getFrontMatterInfo(text);
+					const sourceBlock = "```" + language + "\n" + source + "\n```";
+					contentToParse = text.slice(contentStart).replace(sourceBlock, '');
+				}
+			}
 
 			// find reference date in content
 			const reference = metadataReference ?? (await this.findReference(file));
 
 			// Get timeline object representation
-			const timeline = content.slice(contentStart).replace(sourceBlock, '')
+			const timeline = contentToParse
 				.split(this.settings.singleLine ? '\n' : '\n\n') // Split content into lines and process dates for each lines
 				.map(line => {
 					return {
@@ -122,7 +146,7 @@ export default class EasyTimelinePlugin extends Plugin {
 				.filter(value => value.date != null) as TimelineData // Don't include lines with no valid dates
 
 			// Render timeline
-			const timelineEl = renderTimeline(timeline, sort as "asc" | "desc",);
+			const timelineEl = renderTimeline(timeline, sort as "asc" | "desc");
 			el.replaceWith(timelineEl)
 		});
 	}

@@ -54,24 +54,7 @@ function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'as
         groupedData[month][day].push(event);
     });
 
-    const sortedGroupedData: GroupedTimelineData = {};
-    const sortMonths = (a: string, b: string) =>
-        sortOrder === 'asc'
-            ? new Date(a).getTime() - new Date(b).getTime()
-            : new Date(b).getTime() - new Date(a).getTime();
-
-    Object.keys(groupedData)
-        .sort(sortMonths)
-        .forEach(month => {
-            sortedGroupedData[month] = {};
-            Object.keys(groupedData[month])
-                .sort(sortMonths)
-                .forEach(day => {
-                    sortedGroupedData[month][day] = groupedData[month][day];
-                });
-        });
-
-    return sortedGroupedData;
+    return groupedData;
 }
 
 export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'desc' = 'asc') {
@@ -110,7 +93,9 @@ export function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'd
                 // Box title
                 const title = createEl('div', { cls: 'box-title' });
                 const titleLeft = createEl('div', { cls: 'box-title-left' });
-                const icon = event.icon || metadata.icon ? createEl('i', { cls: `box-title-icon text-${event.status ?? (metadata.status ?? '')}`, text: '' }) : null;
+                const status = event.status ?? metadata.status;
+                const iconCls = status ? `box-title-icon text-${status}` : 'box-title-icon';
+                const icon = event.icon || metadata.icon ? createEl('i', { cls: iconCls, text: '' }) : null;
                 if (icon)
                     setIcon(icon, event.icon || metadata.icon);
                 const time = createEl('div', { cls: 'box-title-right', text: event.date.toTimeString().split(' ')[0] });
