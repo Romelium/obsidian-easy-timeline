@@ -121,6 +121,12 @@ export default class EasyTimelinePlugin extends Plugin {
 				} else {
 					if (sectionInfo) {
 						const lines = text.split(/\r?\n/);
+						// Verify sectionInfo is still valid before splicing (prevents errors when typing above the block)
+						const blockLines = lines.slice(sectionInfo.lineStart, sectionInfo.lineEnd + 1).join('\n');
+						const expectedStart = new RegExp(`^(\`{3,}|~{3,})${language}`, 'm');
+						if (!expectedStart.test(blockLines)) {
+							return; // Stale sectionInfo, wait for Obsidian to trigger a native re-render
+						}
 						lines.splice(sectionInfo.lineStart, sectionInfo.lineEnd - sectionInfo.lineStart + 1);
 						const textWithoutBlock = lines.join('\n');
 						const { contentStart } = getFrontMatterInfo(textWithoutBlock);
@@ -129,7 +135,7 @@ export default class EasyTimelinePlugin extends Plugin {
 						const { contentStart } = getFrontMatterInfo(text);
 						const normalizedSource = source.replace(/\r\n/g, '\n');
 						const escapedSource = normalizedSource.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\n/g, '(?:[ \\t]*)\\r?\\n');
-						const sourceBlockRegex = new RegExp("```" + language + "(?:[ \\t]*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "```");
+						const sourceBlockRegex = new RegExp("(`{3,}|~{3,})" + language + "(?:[ \\t]*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "\\1", "g");
 						contentToParse = text.slice(contentStart).replace(sourceBlockRegex, '');
 					}
 				}
