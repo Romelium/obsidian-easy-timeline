@@ -68,7 +68,7 @@ Jan 2. Made a plan. Caught up on emails, watched snow. Tried chili, read.
 
 #### Dates
 
-Each section's date is determined by the first valid date mentioned in the section. You can use various formats supported by [Chronos](https://github.com/wanasit/chrono), including:
+Each section's date is determined by the first valid date mentioned in the section. You can use various formats supported by [Chrono](https://github.com/wanasit/chrono), including:
 
 - **Relative Dates**:
   - Today
@@ -82,11 +82,11 @@ Each section's date is determined by the first valid date mentioned in the secti
   - Sat Aug 17, 2013 18:40:39
   - 2014-11-30T08:15:30
 
-Feel free to experiment with other date formats recognized by [Chronos](https://github.com/wanasit/chrono).
+Feel free to experiment with other date formats recognized by [Chrono](https://github.com/wanasit/chrono).
 
 #### Reference
 
-The relative dates (e.g. Today, Last week) will use the file created date as the reference by default but you can set it by having a 'created' property which the [Update Time](https://github.com/dsebastien/obsidian-update-time) is useful for. Use any valid [Chronos](https://github.com/wanasit/chrono) specific date format:
+The relative dates (e.g. Today, Last week) will use the file created date as the reference by default but you can set it by having a 'created' property which the [Update Time](https://github.com/dsebastien/obsidian-update-time) is useful for. Use any valid [Chrono](https://github.com/wanasit/chrono) specific date format:
 
 ```yaml
 created: 2018-12-14T18:56
@@ -100,13 +100,13 @@ created: 14 December 2018, at 6:56pm
 
 #### Customize sections
 
-Customize sections using inline metadata for each sections such as author, icon, status, and title. The title metadata can be inferred from the heading. Icon use [fontawesome](https://fontawesome.com/v6/search?o=r&m=free). Status will change the color of the icon, the possible values are success, failure, warning, info. Like this:
+Customize sections using inline metadata for each sections such as author, icon, status, and title. The title metadata can be inferred from the heading. Icon use [lucide](https://lucide.dev/). Status will change the color of the icon, the possible values are success, danger, warning, info. Like this:
 
 ```md
 ## Cool header
 A week ago 9am, [author:: John Doe] did his [icon:: house] chores, so it is a [status:: success]. Looking forward to the next phase is exciting, but reflecting on the journey—from *yesterday*, through **today**, and into ___tomorrow___—brings clarity ~~and gratitude~~.
 
-2024-12-10. [title:: Deployment Failed] [status:: failure] [icon:: bug] [author:: QA Lead] Critical bug found in production.
+2024-12-10. [title:: Deployment Failed] [status:: danger] [icon:: bug] [author:: QA Lead] Critical bug found in production.
 - **Relative Dates**: 
   - Today
   - ==Tomorrow==
@@ -124,7 +124,7 @@ If you don't want dataview to detect a inline metadata, just use a single colon 
 - You can use a regex pattern to find which property to use by toggling the `Use Regex` setting. (e.g. set `(creat|ref)` in `Reference` setting)
 - You can set which property name or regex to be used to get the reference by the `Reference` setting.
 - You can set the default reference date to be the file's creation date or last modified date by the `Default Reference Date` setting.
-- The default sorting is ascending. You can set the default sorting of a timeline to be ascending or descending by the `Default Sorting` setting.
+- The default sorting is ascending. You can set the default sorting of a timeline to be ascending or descending by the `Sorting` setting.
 - You can set if sections will be divided by a single line or double line by toggling the `Use single line` setting.
 
 ### Customizing the Source Block
@@ -133,7 +133,7 @@ You can provide explicit settings (`reference` and `sort`) in several ways. Thes
 
 #### Explicit Reference
 
-To explicitly set the reference for a timeline block, use any valid [Chronos](https://github.com/wanasit/chrono) specific date format.
+To explicitly set the reference for a timeline block, use any valid [Chrono](https://github.com/wanasit/chrono) specific date format.
 
 **1. In the code block language line:**
 ````md
