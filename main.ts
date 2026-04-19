@@ -1,5 +1,5 @@
-import { parse, parseDate, strict } from 'chrono-node';
-import { App, getFrontMatterInfo, Notice, Plugin, PluginSettingTab, Setting, TFile, debounce, Editor, MarkdownView, MarkdownRenderChild } from 'obsidian';
+import { parseDate, strict } from 'chrono-node';
+import { App, debounce, Editor, getFrontMatterInfo, MarkdownRenderChild, MarkdownView, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { renderTimeline, TimelineData } from 'src/renderTimeline';
 import { extractVariedMetadata } from 'utils';
 
@@ -8,6 +8,7 @@ interface EasyTimelineSettings {
 	reference: string;
 	sort: 'asc' | 'desc',
 	singleLine: boolean,
+	defaultReferenceType: 'ctime' | 'mtime',
 }
 
 const DEFAULT_SETTINGS: EasyTimelineSettings = {
@@ -15,6 +16,7 @@ const DEFAULT_SETTINGS: EasyTimelineSettings = {
 	reference: 'created',
 	sort: 'asc',
 	singleLine: false,
+	defaultReferenceType: 'ctime',
 }
 
 export default class EasyTimelinePlugin extends Plugin {
@@ -29,8 +31,8 @@ export default class EasyTimelinePlugin extends Plugin {
 	* @returns A Promise resolving to the reference date or a null for invalid regex in settings
 	*/
 	async findReference(file: TFile): Promise<Date> {
-		// Default to file creation date. Note: It can easily change due to external causes like syncing
-		let ref = new Date(file.stat.ctime);
+		// Default to file creation date or last modified date based on settings. Note: It can easily change due to external causes like syncing
+		let ref = new Date(this.settings.defaultReferenceType === 'mtime' ? file.stat.mtime : file.stat.ctime);
 
 		let regex: RegExp | null = null;
 		// Check if regex is valid
@@ -248,6 +250,18 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.reference)
 				.onChange(async (value) => {
 					this.plugin.settings.reference = value;
+					await this.plugin.saveSettings();
+				})
+			);
+
+		// Setting for 'Default Reference Date'
+		new Setting(containerEl)
+			.setName('Default Reference Date')
+			.setDesc('The file date to use as the default reference if no property is found.')
+			.addDropdown(toggle => toggle.addOptions({ ctime: 'Creation Date', mtime: 'Last Modified Date' })
+				.setValue(this.plugin.settings.defaultReferenceType)
+				.onChange(async (value) => {
+					this.plugin.settings.defaultReferenceType = value as 'ctime' | 'mtime';
 					await this.plugin.saveSettings();
 				})
 			);

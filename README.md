@@ -115,8 +115,9 @@ If you don't want dataview to detect a inline metadata, just use a single colon 
 
 - You can use a regex pattern to find which property to use by toggling the `Use Regex` setting. (e.g. set `(creat|ref)` in `Reference` setting)
 - You can set which property name or regex to be used to get the reference by the `Reference` setting.
+- You can set the default reference date to be the file's creation date or last modified date by the `Default Reference Date` setting.
 - The default sorting is ascending. You can set the default sorting of a timeline to be ascending or descending by the `Default Sorting` setting.
-- You can set if sections will be divided by a single line or double line by toggling the `Use Regex` setting.
+- You can set if sections will be divided by a single line or double line by toggling the `Use single line` setting.
 
 ### Customizing the Source Block
 
