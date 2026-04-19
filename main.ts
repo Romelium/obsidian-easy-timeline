@@ -109,7 +109,7 @@ export default class EasyTimelinePlugin extends Plugin {
 				// Determine if source block is only metadata
 				const isSourceMetadataOnly = source.trim() === '' || source.split(/\r?\n/).every(line => {
 					const trimmed = line.trim();
-					return !/^(?:\[?(?:sort|reference)\s*::?\s*([^\[\]]+)\]?|(?:sort|reference)\s*:\s*(.+))$/i.test(trimmed);
+					return trimmed === '' || /^(?:\[?(?:sort|reference)\s*::?\s*([^\[\]]+)\]?|(?:sort|reference)\s*:\s*(.+))$/i.test(trimmed);
 				});
 
 				let contentToParse = "";
