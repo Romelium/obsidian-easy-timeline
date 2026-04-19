@@ -1,5 +1,5 @@
 import { parse, parseDate, strict } from 'chrono-node';
-import { App, getFrontMatterInfo, Notice, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { App, getFrontMatterInfo, Notice, Plugin, PluginSettingTab, Setting, TFile, debounce, Editor, MarkdownView, MarkdownRenderChild } from 'obsidian';
 import { renderTimeline, TimelineData } from 'src/renderTimeline';
 import { extractVariedMetadata } from 'utils';
 
@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS: EasyTimelineSettings = {
 
 export default class EasyTimelinePlugin extends Plugin {
 	settings: EasyTimelineSettings;
+	activeBlocks: Map<string, Set<TimelineRenderChild>> = new Map();
 
 	/**
 	* Retrieves the reference date for a file, using a regex pattern or a frontmatter property.
@@ -90,67 +91,112 @@ export default class EasyTimelinePlugin extends Plugin {
 
 		const language = 'timeline';
 		this.registerMarkdownCodeBlockProcessor(language, async (source, el, ctx) => {
-			// Get active file
-			const file = this.app.workspace.getActiveFile();
-			if (!file) return;  // Exit if no file
+			const sourcePath = ctx.sourcePath;
+			const file = this.app.vault.getAbstractFileByPath(sourcePath);
+			if (!(file instanceof TFile)) return;
 
-			// Read file content
-			const text = await this.app.vault.read(file);
+			const render = async (currentText?: string) => {
+				const sectionInfo = ctx.getSectionInfo(el);
+				const text = currentText ?? sectionInfo?.text ?? await this.app.vault.cachedRead(file);
 
-			// Get and process all metadata from source block
-			const metadata = extractVariedMetadata(source);
-			const metadataReference = metadata.reference ? strict.parseDate(metadata.reference) : null;
-			const metadataSortRaw = metadata.sort?.toLowerCase();
-			const metadataSort = metadataSortRaw ? { ascending: 'asc', descending: 'desc' }[metadataSortRaw] || metadataSortRaw : null;
-			const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
+				// Get and process all metadata from source block
+				const metadata = extractVariedMetadata(source);
+				const metadataReference = metadata.reference ? strict.parseDate(metadata.reference) : null;
+				const metadataSortRaw = metadata.sort?.toLowerCase();
+				const metadataSort = metadataSortRaw ? { ascending: 'asc', descending: 'desc' }[metadataSortRaw] || metadataSortRaw : null;
+				const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
 
-			// Determine if source block is only metadata
-			const isSourceMetadataOnly = source.trim() === '' || source.split(/\r?\n/).every(line => {
-				const trimmed = line.trim();
-				return trimmed === '' || /^(?:\[?(?:sort|reference)\s*::?\s*([^\[\]]+)\]?|(?:sort|reference)\s*:\s*(.+))$/i.test(trimmed);
-			});
-
-			let contentToParse = "";
-			if (!isSourceMetadataOnly) {
-				contentToParse = source.split(/\r?\n/).filter(line => {
+				// Determine if source block is only metadata
+				const isSourceMetadataOnly = source.trim() === '' || source.split(/\r?\n/).every(line => {
 					const trimmed = line.trim();
 					return !/^(?:\[?(?:sort|reference)\s*::?\s*([^\[\]]+)\]?|(?:sort|reference)\s*:\s*(.+))$/i.test(trimmed);
-				}).join('\n');
-			} else {
-				const sectionInfo = ctx.getSectionInfo(el);
-				if (sectionInfo) {
-					const lines = text.split(/\r?\n/);
-					lines.splice(sectionInfo.lineStart, sectionInfo.lineEnd - sectionInfo.lineStart + 1);
-					const textWithoutBlock = lines.join('\n');
-					const { contentStart } = getFrontMatterInfo(textWithoutBlock);
-					contentToParse = textWithoutBlock.slice(contentStart);
+				});
+
+				let contentToParse = "";
+				if (!isSourceMetadataOnly) {
+					contentToParse = source.split(/\r?\n/).filter(line => {
+						const trimmed = line.trim();
+						return !/^(?:\[?(?:sort|reference)\s*::?\s*([^\[\]]+)\]?|(?:sort|reference)\s*:\s*(.+))$/i.test(trimmed);
+					}).join('\n');
 				} else {
-					const { contentStart } = getFrontMatterInfo(text);
-					const normalizedSource = source.replace(/\r\n/g, '\n');
-					const escapedSource = normalizedSource.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\n/g, '(?:[ \\t]*)\\r?\\n');
-					const sourceBlockRegex = new RegExp("```" + language + "(?:[ \\t]*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "```");
-					contentToParse = text.slice(contentStart).replace(sourceBlockRegex, '');
+					if (sectionInfo) {
+						const lines = text.split(/\r?\n/);
+						lines.splice(sectionInfo.lineStart, sectionInfo.lineEnd - sectionInfo.lineStart + 1);
+						const textWithoutBlock = lines.join('\n');
+						const { contentStart } = getFrontMatterInfo(textWithoutBlock);
+						contentToParse = textWithoutBlock.slice(contentStart);
+					} else {
+						const { contentStart } = getFrontMatterInfo(text);
+						const normalizedSource = source.replace(/\r\n/g, '\n');
+						const escapedSource = normalizedSource.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\n/g, '(?:[ \\t]*)\\r?\\n');
+						const sourceBlockRegex = new RegExp("```" + language + "(?:[ \\t]*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "```");
+						contentToParse = text.slice(contentStart).replace(sourceBlockRegex, '');
+					}
+				}
+
+				// find reference date in content
+				const reference = metadataReference ?? (await this.findReference(file));
+
+				// Get timeline object representation
+				const timeline = contentToParse
+					.split(this.settings.singleLine ? /\r?\n/ : /(?:\r?\n){2,}/) // Split content into lines and process dates for each lines
+					.map(line => {
+						return {
+							details: line.trim(),
+							date: parseDate(line, reference)
+						};
+					})
+					.filter(value => value.date != null) as TimelineData; // Don't include lines with no valid dates
+
+				// Render timeline
+				const timelineEl = renderTimeline(timeline, sort as "asc" | "desc");
+				el.empty();
+				el.appendChild(timelineEl);
+			};
+
+			await render();
+
+			const renderChild = new TimelineRenderChild(el, this, sourcePath, render);
+			ctx.addChild(renderChild);
+		});
+
+		const debouncedEditorChange = debounce((editor: Editor, info: MarkdownView | any) => {
+			if (info?.file) {
+				const blocks = this.activeBlocks.get(info.file.path);
+				if (blocks) {
+					const currentText = editor.getValue();
+					for (const block of blocks) {
+						block.renderFn(currentText);
+					}
 				}
 			}
+		}, 300, true);
 
-			// find reference date in content
-			const reference = metadataReference ?? (await this.findReference(file));
+		this.registerEvent(this.app.workspace.on('editor-change', debouncedEditorChange));
 
-			// Get timeline object representation
-			const timeline = contentToParse
-				.split(this.settings.singleLine ? /\r?\n/ : /(?:\r?\n){2,}/) // Split content into lines and process dates for each lines
-				.map(line => {
-					return {
-						details: line.trim(),
-						date: parseDate(line, reference)
-					};
-				})
-				.filter(value => value.date != null) as TimelineData // Don't include lines with no valid dates
+		this.registerEvent(this.app.metadataCache.on('changed', (file, data, cache) => {
+			const blocks = this.activeBlocks.get(file.path);
+			if (blocks) {
+				for (const block of blocks) {
+					block.renderFn(data);
+				}
+			}
+		}));
 
-			// Render timeline
-			const timelineEl = renderTimeline(timeline, sort as "asc" | "desc");
-			el.replaceWith(timelineEl)
-		});
+		this.registerEvent(this.app.vault.on('rename', (file, oldPath) => {
+			const blocks = this.activeBlocks.get(oldPath);
+			if (blocks) {
+				this.activeBlocks.set(file.path, blocks);
+				this.activeBlocks.delete(oldPath);
+				for (const block of blocks) {
+					block.sourcePath = file.path;
+				}
+			}
+		}));
+
+		this.registerEvent(this.app.vault.on('delete', (file) => {
+			this.activeBlocks.delete(file.path);
+		}));
 	}
 
 	async loadSettings() {
@@ -223,5 +269,35 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				})
 			);
+	}
+}
+
+class TimelineRenderChild extends MarkdownRenderChild {
+	constructor(
+		containerEl: HTMLElement,
+		private plugin: EasyTimelinePlugin,
+		public sourcePath: string,
+		public renderFn: (text?: string) => Promise<void>
+	) {
+		super(containerEl);
+	}
+
+	onload() {
+		let blocks = this.plugin.activeBlocks.get(this.sourcePath);
+		if (!blocks) {
+			blocks = new Set();
+			this.plugin.activeBlocks.set(this.sourcePath, blocks);
+		}
+		blocks.add(this);
+	}
+
+	onunload() {
+		const blocks = this.plugin.activeBlocks.get(this.sourcePath);
+		if (blocks) {
+			blocks.delete(this);
+			if (blocks.size === 0) {
+				this.plugin.activeBlocks.delete(this.sourcePath);
+			}
+		}
 	}
 }
