@@ -27,6 +27,6 @@
 	},
 	"dependencies": {
 		"bootstrap": "^5.3.3",
-		"chrono-node": "^2.7.7"
+		"chrono-node": "^2.9.0"
 	}
 }
