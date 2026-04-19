@@ -1,4 +1,4 @@
-import { parseDate, strict } from 'chrono-node';
+import { parse, parseDate, strict } from 'chrono-node';
 import { App, Component, debounce, Editor, getFrontMatterInfo, MarkdownRenderChild, MarkdownView, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { renderTimeline, TimelineData } from 'src/renderTimeline';
 import { extractVariedMetadata, extractInlineMetadata } from 'utils';
@@ -204,12 +204,17 @@ export default class EasyTimelinePlugin extends Plugin {
 				const timeline = contentToParse
 					.split(this.settings.singleLine ? /\r?\n/ : /(?:\r?\n){2,}/) // Split content into lines and process dates for each lines
 					.map(line => {
+						const parsedResults = parse(line, reference);
+						if (parsedResults.length === 0) return null;
+						const result = parsedResults[0];
 						return {
 							details: line.trim(),
-							date: parseDate(line, reference)
+							date: result.date(),
+							hasTime: result.start.isCertain('hour') || result.start.isCertain('minute') || result.start.isCertain('second'),
+							dateText: result.text
 						};
 					})
-					.filter(value => value.date != null) as TimelineData; // Don't include lines with no valid dates
+					.filter(value => value != null) as TimelineData; // Don't include lines with no valid dates
 
 				markdownComponent.unload();
 				renderChild.removeChild(markdownComponent);

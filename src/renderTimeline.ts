@@ -3,6 +3,8 @@ import { Component, MarkdownRenderer, setIcon } from 'obsidian';
 
 export interface TimelineEvent {
     date: Date;
+    hasTime?: boolean;
+    dateText?: string;
     title?: string; // Type of the event (e.g., "Job Created", "Job Edited")
     icon?: string; // Icon class names (e.g., "asterisk")
     status?: "success" | "failure" | "info" | "warning";
@@ -98,7 +100,8 @@ export async function renderTimeline(timelineData: TimelineData, sortOrder: 'asc
                 const icon = event.icon || metadata.icon ? createEl('i', { cls: iconCls, text: '' }) : null;
                 if (icon)
                     setIcon(icon, event.icon || metadata.icon);
-                const time = createEl('div', { cls: 'box-title-right', text: event.date.toTimeString().split(' ')[0] });
+                const timeString = event.date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+                const time = event.hasTime ? createEl('div', { cls: 'box-title-right', text: timeString }) : null;
 
                 // Box content
                 const content = createEl('div', { cls: 'box-content' });
@@ -118,11 +121,15 @@ export async function renderTimeline(timelineData: TimelineData, sortOrder: 'asc
                 // Box footer
                 const footer = event.author || metadata.author ? createEl('div', { cls: 'box-footer', text: `- ${event.author ?? metadata.author}` }) : null;
 
+                const fallbackTitle = event.dateText ? event.dateText.charAt(0).toUpperCase() + event.dateText.slice(1) : '';
+                const titleText = (event.title ?? (metadata.title ?? (header ?? fallbackTitle))).trim();
+                
                 if (icon) titleLeft.appendChild(icon);
-                titleLeft.createSpan({ text: event.title ?? (metadata.title ?? (header ?? '')) });
+                titleLeft.createSpan({ text: titleText || '\u200B' }); // \u200B (zero-width space) ensures the height never collapses
                 title.appendChild(titleLeft);
-                title.appendChild(time);
+                if (time) title.appendChild(time);
                 box.appendChild(title);
+                
                 box.appendChild(content);
                 if (footer) box.appendChild(footer);
                 col.appendChild(box);
