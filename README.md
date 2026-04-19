@@ -48,10 +48,10 @@ Jan 2. Made a plan. Caught up on emails, watched snow. Tried chili, read.
 ```
 ````
 
-Or, you can format it this way, by placing the content inside the block. However, this approach does not allow you to use [explicit settings](#customizing-the-source-block):  
+Or, you can format it this way, by placing the content inside the block. You can also use [explicit settings](#customizing-the-source-block) with this approach:
 
 ````md
-```timeline
+```timeline sort:desc
 Today. Slow breakfast. Organized, felt good. Watched a space doc, had veggies and quinoa.
 
 Tomorrow. Quick jog. Worked on a project. Dinner with friends.
@@ -121,47 +121,56 @@ If you don't want dataview to detect a inline metadata, just use a single colon 
 
 ### Customizing the Source Block
 
+You can provide explicit settings (`reference` and `sort`) in several ways. These settings have the highest precedence.
+
 #### Explicit Reference
 
-To explicitly set the reference for a timeline block, you can include a `reference` field in the source. This will have the highest precedence. Use any valid [Chronos](https://github.com/wanasit/chrono) specific date format:
+To explicitly set the reference for a timeline block, use any valid [Chronos](https://github.com/wanasit/chrono) specific date format.
 
+**1. In the code block language line:**
 ````md
-```timeline
-reference: 2011 Oct 25
+```timeline reference:"2011 Oct 25"
 ```
 ````
 
-or
+**2. Inside the block (on a separate line or inline):**
 
 ````md
 ```timeline
 reference: 2011-10-25
+[reference:: 2011-10-25]
+```
+````
+
+**3. Outside the block (inline):**
+````md
+[reference:: 2011-10-25]
+```timeline
 ```
 ````
 
 #### Explicit Sorting
 
-To explicitly set the sorting for a timeline block. you can include a `sort` field in the source. This will have the highest precedence.
+To explicitly set the sorting for a timeline block, you can use `asc` or `desc`.
 
+**1. In the code block language line:**
 ````md
-```timeline
-sort: asc
+```timeline sort:asc
 ```
 ````
 
-or
-
+**2. Inside the block:**
 ````md
 ```timeline
-sort: dest
+sort: desc
+[sort:: desc]
 ```
 ````
 
-or
-
+**3. Outside the block:**
 ````md
+[sort:: desc]
 ```timeline
-sort: Descending
 ```
 ````
 

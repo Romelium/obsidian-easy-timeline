@@ -1,7 +1,7 @@
 import { parseDate, strict } from 'chrono-node';
 import { App, debounce, Editor, getFrontMatterInfo, MarkdownRenderChild, MarkdownView, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { renderTimeline, TimelineData } from 'src/renderTimeline';
-import { extractVariedMetadata } from 'utils';
+import { extractVariedMetadata, extractInlineMetadata } from 'utils';
 
 interface EasyTimelineSettings {
 	useRegex: boolean,
@@ -101,12 +101,20 @@ export default class EasyTimelinePlugin extends Plugin {
 				const sectionInfo = ctx.getSectionInfo(el);
 				const text = currentText ?? sectionInfo?.text ?? await this.app.vault.cachedRead(file);
 
-				// Get and process all metadata from source block
-				const metadata = extractVariedMetadata(source);
-				const metadataReference = metadata.reference ? strict.parseDate(metadata.reference) : null;
-				const metadataSortRaw = metadata.sort?.toLowerCase();
-				const metadataSort = metadataSortRaw ? { ascending: 'asc', descending: 'desc' }[metadataSortRaw] || metadataSortRaw : null;
-				const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
+				let languageLineMetadata: Record<string, string> = {};
+				if (sectionInfo) {
+					const lines = text.split(/\r?\n/);
+					const languageLine = lines[sectionInfo.lineStart];
+					if (languageLine) {
+						const langRegex = /([a-zA-Z0-9_-]+)\s*[:=]\s*(?:"([^"]+)"|'([^']+)'|([^\s]+))/g;
+						let match;
+						while ((match = langRegex.exec(languageLine)) !== null) {
+							const key = match[1].toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+							const value = match[2] || match[3] || match[4];
+							languageLineMetadata[key] = value;
+						}
+					}
+				}
 
 				// Determine if source block is only metadata
 				const isSourceMetadataOnly = source.trim() === '' || source.split(/\r?\n/).every(line => {
@@ -141,6 +149,28 @@ export default class EasyTimelinePlugin extends Plugin {
 						contentToParse = text.slice(contentStart).replace(sourceBlockRegex, '');
 					}
 				}
+
+				// Extract inline metadata from contentToParse
+				const inlineMetadataContent = extractInlineMetadata(contentToParse);
+				
+				// Remove inline [sort:: ...] and [reference:: ...] from contentToParse
+				contentToParse = contentToParse.replace(/\[(?:sort|reference)\s*::?\s*[^\[\]]+\]/gi, '');
+
+				// Get and process all metadata from source block
+				const variedMetadata = extractVariedMetadata(source);
+				const inlineMetadataSource = extractInlineMetadata(source);
+				
+				const metadata = { 
+					...inlineMetadataContent, 
+					...variedMetadata, 
+					...inlineMetadataSource, 
+					...languageLineMetadata 
+				};
+
+				const metadataReference = metadata.reference ? strict.parseDate(metadata.reference) : null;
+				const metadataSortRaw = metadata.sort?.toLowerCase();
+				const metadataSort = metadataSortRaw ? { ascending: 'asc', descending: 'desc' }[metadataSortRaw] || metadataSortRaw : null;
+				const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
 
 				// find reference date in content
 				const reference = metadataReference ?? (await this.findReference(file));
