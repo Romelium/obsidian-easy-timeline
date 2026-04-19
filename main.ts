@@ -148,6 +148,10 @@ export default class EasyTimelinePlugin extends Plugin {
 						const sourceBlockRegex = new RegExp("(`{3,}|~{3,})" + language + "(?:[ \\t]*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "\\1", "g");
 						contentToParse = text.slice(contentStart).replace(sourceBlockRegex, '');
 					}
+
+					// Remove any other timeline blocks to prevent recursion
+					const allTimelineBlocksRegex = new RegExp("(`{3,}|~{3,})" + language + "(?:[ \\t].*)?\\r?\\n(?:[\\s\\S]*?(?:\\r?\\n))?\\1", "g");
+					contentToParse = contentToParse.replace(allTimelineBlocksRegex, '');
 				}
 
 				// Extract inline metadata from contentToParse
