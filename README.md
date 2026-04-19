@@ -9,6 +9,8 @@ You want to turn this into a timeline
 ```md
 Tomorrow. Quick jog. Worked on a project. Dinner with friends.
 
+Tomorrow. Slow breakfast. Organized, felt good. Watched a space doc, had veggies and quinoa.
+
 Dec 31. Walked, reflected. Last-minute shopping. Celebrated with friends.
 
 Jan 1. Slept in, journaled. Walked, read. Quiet night, healthy meal, episodes.
