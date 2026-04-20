@@ -332,6 +332,11 @@ export default class EasyTimelinePlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+		for (const blocks of this.activeBlocks.values()) {
+			for (const block of blocks) {
+				block.renderFn();
+			}
+		}
 	}
 }
 
