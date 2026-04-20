@@ -82,6 +82,9 @@ Each section's date is determined by the first valid date mentioned in the secti
   - Sat Aug 17, 2013 18:40:39
   - 2014-11-30T08:15:30
 
+- **Timezones**:
+  - You can use common timezone abbreviations like `EST`, `JST`, `UTC`, etc. (e.g., `Today at 3pm EST`)
+
 Feel free to experiment with other date formats recognized by [Chrono](https://github.com/wanasit/chrono).
 
 #### Reference
@@ -100,7 +103,7 @@ created: 14 December 2018, at 6:56pm
 
 #### Customize sections
 
-Customize sections using inline metadata for each sections such as author, icon, status, and title. The title metadata can be inferred from the heading. Icon use [lucide](https://lucide.dev/). Status will change the color of the icon, the possible values are success, danger, warning, info. Like this:
+Customize sections using inline metadata for each sections such as author, icon, status, and title. The title metadata can be inferred from the heading. If no title or heading is provided, it falls back to the capitalized date text. Icon use [lucide](https://lucide.dev/). Status will change the color of the icon, the possible values are success, danger, warning, info. Like this:
 
 ```md
 ## Cool header
@@ -119,6 +122,8 @@ A week ago 9am, [author:: John Doe] did his [icon:: house] chores, so it is a [s
 
 If you don't want dataview to detect a inline metadata, just use a single colon (e.g. `[author: John Doe]` instead of `[author:: John Doe]`)
 
+**Note:** The plugin supports embedding. If you embed a file containing a timeline block, it will correctly use the embedded file's content and reference date.
+
 ### Settings
 
 - You can use a regex pattern to find which property to use by toggling the `Use Regex` setting. (e.g. set `(creat|ref)` in `Reference` setting)
@@ -126,6 +131,8 @@ If you don't want dataview to detect a inline metadata, just use a single colon 
 - You can set the default reference date to be the file's creation date or last modified date by the `Default Reference Date` setting.
 - The default sorting is ascending. You can set the default sorting of a timeline to be ascending or descending by the `Sorting` setting.
 - You can set if sections will be divided by a single line or double line by toggling the `Use single line` setting.
+- You can display the exact date and time written in the text, respecting timezones like (EST) or (JST) by toggling the `Preserve Timezones` setting. By default, it sorts events by their absolute global time.
+- You can sort events by their local time (ignoring timezone differences) instead of their absolute global time by toggling the `Sort Relative to Timezone` setting.
 
 ### Customizing the Source Block
 
