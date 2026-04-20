@@ -1,7 +1,7 @@
 {
 	"id": "easy-timeline",
 	"name": "Easy Timeline",
-	"version": "2.2.0",
+	"version": "2.2.1",
 	"minAppVersion": "0.15.0",
 	"description": "Create beautiful visual timelines from your notes using natural language dates (e.g., 'yesterday', 'next week'). Customize events with inline metadata, icons, and statuses. Supports relative dates via frontmatter properties and timezones.",
 	"author": "Romelium",
