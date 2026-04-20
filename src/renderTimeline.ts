@@ -4,6 +4,7 @@ import { Component, MarkdownRenderer, setIcon } from 'obsidian';
 export interface TimelineEvent {
     date: Date;
     displayDate: Date;
+    sortDate?: Date;
     hasTime?: boolean;
     dateText?: string;
     title?: string; // Type of the event (e.g., "Job Created", "Job Edited")
@@ -33,17 +34,18 @@ type GroupedTimelineData = {
     };
 };
 
-function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'asc') {
+function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'asc', sortRelativeTimezone: boolean = false) {
     // Sort events by date
-    events.sort((a, b) => sortOrder === 'asc'
-        ? a.date.getTime() - b.date.getTime()
-        : b.date.getTime() - a.date.getTime()
-    );
+    events.sort((a, b) => {
+        const timeA = sortRelativeTimezone && a.sortDate ? a.sortDate.getTime() : a.date.getTime();
+        const timeB = sortRelativeTimezone && b.sortDate ? b.sortDate.getTime() : b.date.getTime();
+        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
+    });
 
     const groupedData: GroupedTimelineData = {};
 
     events.forEach(event => {
-        const eventDate = event.displayDate;
+        const eventDate = (sortRelativeTimezone && event.sortDate) ? event.sortDate : event.displayDate;
         const month = formatMonth(eventDate); // Group by "Month, Year"
         const day = formatDate(eventDate);   // Group by "Day, Date"
 
@@ -59,13 +61,13 @@ function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'as
     return groupedData;
 }
 
-export async function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'desc' = 'asc', sourcePath: string, component: Component) {
+export async function renderTimeline(timelineData: TimelineData, sortOrder: 'asc' | 'desc' = 'asc', sortRelativeTimezone: boolean = false, sourcePath: string, component: Component) {
     const container = createEl('div', { cls: 'easy-timeline-container' });
     const timeline = createEl('div', { cls: 'timeline' });
     container.appendChild(timeline);
 
     // Process the timeline data
-    const groupedData = groupTimelineData(timelineData, sortOrder);
+    const groupedData = groupTimelineData(timelineData, sortOrder, sortRelativeTimezone);
 
     for (const [month, days] of Object.entries(groupedData)) {
         // Create month header

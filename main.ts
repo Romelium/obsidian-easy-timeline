@@ -1,7 +1,7 @@
-import { parse, parseDate, strict } from 'chrono-node';
+import { parse, strict } from 'chrono-node';
 import { App, Component, debounce, Editor, getFrontMatterInfo, MarkdownRenderChild, MarkdownView, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
 import { renderTimeline, TimelineData } from 'src/renderTimeline';
-import { extractVariedMetadata, extractInlineMetadata } from 'utils';
+import { extractInlineMetadata, extractVariedMetadata } from 'utils';
 
 interface EasyTimelineSettings {
 	useRegex: boolean,
@@ -10,6 +10,7 @@ interface EasyTimelineSettings {
 	singleLine: boolean,
 	defaultReferenceType: 'ctime' | 'mtime',
 	preserveTimezones: boolean,
+	sortRelativeTimezone: boolean,
 }
 
 const DEFAULT_SETTINGS: EasyTimelineSettings = {
@@ -19,6 +20,7 @@ const DEFAULT_SETTINGS: EasyTimelineSettings = {
 	singleLine: false,
 	defaultReferenceType: 'ctime',
 	preserveTimezones: false,
+	sortRelativeTimezone: false,
 }
 
 export default class EasyTimelinePlugin extends Plugin {
@@ -233,28 +235,37 @@ export default class EasyTimelinePlugin extends Plugin {
 				const timeline = contentToParse
 					.split(this.settings.singleLine ? /\r?\n/ : /(?:\r?\n){2,}/) // Split content into lines and process dates for each lines
 					.map(line => {
-						const parseOptions = this.settings.preserveTimezones ? { timezones: tzMap } : undefined;
+						const parseOptions = (this.settings.preserveTimezones || this.settings.sortRelativeTimezone) ? { timezones: tzMap } : undefined;
 						const parsedResults = parse(line, reference, parseOptions);
 						if (parsedResults.length === 0) return null;
 						const result = parsedResults[0];
 						
 						const jsDate = result.date();
 						let displayDate = jsDate;
+						let sortDate = jsDate;
 						
-						if (this.settings.preserveTimezones) {
+						if (this.settings.preserveTimezones || this.settings.sortRelativeTimezone) {
 							const year = result.start.get('year') ?? jsDate.getFullYear();
 							const month = result.start.get('month') ? result.start.get('month')! - 1 : jsDate.getMonth();
 							const day = result.start.get('day') ?? jsDate.getDate();
 							const hour = result.start.get('hour') ?? jsDate.getHours();
 							const minute = result.start.get('minute') ?? jsDate.getMinutes();
 							const second = result.start.get('second') ?? jsDate.getSeconds();
-							displayDate = new Date(year, month, day, hour, minute, second);
+							const localDate = new Date(year, month, day, hour, minute, second);
+							
+							if (this.settings.preserveTimezones) {
+								displayDate = localDate;
+							}
+							if (this.settings.sortRelativeTimezone) {
+								sortDate = localDate;
+							}
 						}
 
 						return {
 							details: line.trim(),
 							date: jsDate,
 							displayDate: displayDate,
+							sortDate: sortDate,
 							hasTime: result.start.isCertain('hour') || result.start.isCertain('minute') || result.start.isCertain('second'),
 							dateText: result.text
 						};
@@ -267,7 +278,7 @@ export default class EasyTimelinePlugin extends Plugin {
 				renderChild.addChild(markdownComponent);
 
 				// Render timeline
-				const timelineEl = await renderTimeline(timeline, sort as "asc" | "desc", actualFile.path, markdownComponent);
+				const timelineEl = await renderTimeline(timeline, sort as "asc" | "desc", this.settings.sortRelativeTimezone, actualFile.path, markdownComponent);
 				el.empty();
 				el.appendChild(timelineEl);
 			};
@@ -401,11 +412,23 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 		// Setting for 'Preserve Timezones'
 		new Setting(containerEl)
 			.setName('Preserve Timezones')
-			.setDesc('If enabled, the timeline will sort events by their absolute global time but display the exact date and time written in the text, respecting timezones like (EST) or (JST).')
+			.setDesc('If enabled, the timeline will display the exact date and time written in the text, respecting timezones like (EST) or (JST). By default, it sorts events by their absolute global time.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.preserveTimezones)
 				.onChange(async (value) => {
 					this.plugin.settings.preserveTimezones = value;
+					await this.plugin.saveSettings();
+				})
+			);
+
+		// Setting for 'Sort Relative to Timezone'
+		new Setting(containerEl)
+			.setName('Sort Relative to Timezone')
+			.setDesc('If enabled, the timeline will sort events by their local time (ignoring timezone differences) instead of their absolute global time.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.sortRelativeTimezone)
+				.onChange(async (value) => {
+					this.plugin.settings.sortRelativeTimezone = value;
 					await this.plugin.saveSettings();
 				})
 			);
