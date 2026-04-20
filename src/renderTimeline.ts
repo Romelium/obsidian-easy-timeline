@@ -3,6 +3,7 @@ import { Component, MarkdownRenderer, setIcon } from 'obsidian';
 
 export interface TimelineEvent {
     date: Date;
+    displayDate: Date;
     hasTime?: boolean;
     dateText?: string;
     title?: string; // Type of the event (e.g., "Job Created", "Job Edited")
@@ -42,7 +43,7 @@ function groupTimelineData(events: TimelineData, sortOrder: 'asc' | 'desc' = 'as
     const groupedData: GroupedTimelineData = {};
 
     events.forEach(event => {
-        const eventDate = event.date;
+        const eventDate = event.displayDate;
         const month = formatMonth(eventDate); // Group by "Month, Year"
         const day = formatDate(eventDate);   // Group by "Day, Date"
 
@@ -100,7 +101,7 @@ export async function renderTimeline(timelineData: TimelineData, sortOrder: 'asc
                 const icon = event.icon || metadata.icon ? createEl('i', { cls: iconCls, text: '' }) : null;
                 if (icon)
                     setIcon(icon, event.icon || metadata.icon);
-                const timeString = event.date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+                const timeString = event.displayDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
                 const time = event.hasTime ? createEl('div', { cls: 'box-title-right', text: timeString }) : null;
 
                 // Box content

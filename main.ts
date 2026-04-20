@@ -9,6 +9,7 @@ interface EasyTimelineSettings {
 	sort: 'asc' | 'desc',
 	singleLine: boolean,
 	defaultReferenceType: 'ctime' | 'mtime',
+	preserveTimezones: boolean,
 }
 
 const DEFAULT_SETTINGS: EasyTimelineSettings = {
@@ -17,6 +18,7 @@ const DEFAULT_SETTINGS: EasyTimelineSettings = {
 	sort: 'asc',
 	singleLine: false,
 	defaultReferenceType: 'ctime',
+	preserveTimezones: false,
 }
 
 export default class EasyTimelinePlugin extends Plugin {
@@ -200,16 +202,59 @@ export default class EasyTimelinePlugin extends Plugin {
 				// find reference date in content
 				const reference = metadataReference ?? (await this.findReference(actualFile));
 
+				// Define common timezones so Chrono understands abbreviations
+				const tzMap = {
+					// North America
+					AST: -240, ADT: -180,
+					EST: -300, EDT: -240,
+					CST: -360, CDT: -300,
+					MST: -420, MDT: -360,
+					PST: -480, PDT: -420,
+					AKST: -540, AKDT: -480,
+					HST: -600, HDT: -540,
+					// Europe
+					WET: 0, WEST: 60,
+					CET: 60, CEST: 120,
+					EET: 120, EEST: 180,
+					// Australia
+					AWST: 480, AWDT: 540,
+					ACST: 570, ACDT: 630,
+					AEST: 600, AEDT: 660,
+					// New Zealand
+					NZST: 720, NZDT: 780,
+					// Asia
+					JST: 540, KST: 540,
+					IST: 330,
+					// Universal
+					GMT: 0, UTC: 0
+				};
+
 				// Get timeline object representation
 				const timeline = contentToParse
 					.split(this.settings.singleLine ? /\r?\n/ : /(?:\r?\n){2,}/) // Split content into lines and process dates for each lines
 					.map(line => {
-						const parsedResults = parse(line, reference);
+						const parseOptions = this.settings.preserveTimezones ? { timezones: tzMap } : undefined;
+						const parsedResults = parse(line, reference, parseOptions);
 						if (parsedResults.length === 0) return null;
 						const result = parsedResults[0];
+						
+						const jsDate = result.date();
+						let displayDate = jsDate;
+						
+						if (this.settings.preserveTimezones) {
+							const year = result.start.get('year') ?? jsDate.getFullYear();
+							const month = result.start.get('month') ? result.start.get('month')! - 1 : jsDate.getMonth();
+							const day = result.start.get('day') ?? jsDate.getDate();
+							const hour = result.start.get('hour') ?? jsDate.getHours();
+							const minute = result.start.get('minute') ?? jsDate.getMinutes();
+							const second = result.start.get('second') ?? jsDate.getSeconds();
+							displayDate = new Date(year, month, day, hour, minute, second);
+						}
+
 						return {
 							details: line.trim(),
-							date: result.date(),
+							date: jsDate,
+							displayDate: displayDate,
 							hasTime: result.start.isCertain('hour') || result.start.isCertain('minute') || result.start.isCertain('second'),
 							dateText: result.text
 						};
@@ -349,6 +394,18 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.singleLine)
 				.onChange(async (value) => {
 					this.plugin.settings.singleLine = value;
+					await this.plugin.saveSettings();
+				})
+			);
+
+		// Setting for 'Preserve Timezones'
+		new Setting(containerEl)
+			.setName('Preserve Timezones')
+			.setDesc('If enabled, the timeline will sort events by their absolute global time but display the exact date and time written in the text, respecting timezones like (EST) or (JST).')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.preserveTimezones)
+				.onChange(async (value) => {
+					this.plugin.settings.preserveTimezones = value;
 					await this.plugin.saveSettings();
 				})
 			);
