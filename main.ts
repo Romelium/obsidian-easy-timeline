@@ -127,11 +127,16 @@ export default class EasyTimelinePlugin extends Plugin {
 				const text = currentText ?? sectionInfo?.text ?? await this.app.vault.cachedRead(actualFile);
 
 				let languageLineMetadata: Record<string, string> = {};
+				const langRegex = /([a-zA-Z0-9_-]+)\s*[:=]\s*(?:"([^"]+)"|'([^']+)'|([^\s]+))/g;
+				
+				const normalizedSource = source.replace(/\r\n/g, '\n');
+				const escapedSource = normalizedSource.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\n/g, '(?:[ \\t]*)\\r?\\n');
+				const sourceBlockRegex = new RegExp("^[ \\t]*(`{3,}|~{3,})" + language + "(.*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "^[ \\t]*\\1", "gm");
+
 				if (sectionInfo) {
 					const lines = text.split(/\r?\n/);
 					const languageLine = lines[sectionInfo.lineStart];
 					if (languageLine) {
-						const langRegex = /([a-zA-Z0-9_-]+)\s*[:=]\s*(?:"([^"]+)"|'([^']+)'|([^\s]+))/g;
 						let match;
 						while ((match = langRegex.exec(languageLine)) !== null) {
 							const key = match[1].toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -139,6 +144,17 @@ export default class EasyTimelinePlugin extends Plugin {
 							languageLineMetadata[key] = value;
 						}
 					}
+				} else {
+					const match = sourceBlockRegex.exec(text);
+					if (match && match[2]) {
+						let m;
+						while ((m = langRegex.exec(match[2])) !== null) {
+							const key = m[1].toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+							const value = m[2] || m[3] || m[4];
+							languageLineMetadata[key] = value;
+						}
+					}
+					sourceBlockRegex.lastIndex = 0;
 				}
 
 				// Determine if source block is only metadata
@@ -158,7 +174,7 @@ export default class EasyTimelinePlugin extends Plugin {
 						const lines = text.split(/\r?\n/);
 						// Verify sectionInfo is still valid before splicing (prevents errors when typing above the block)
 						const blockLines = lines.slice(sectionInfo.lineStart, sectionInfo.lineEnd + 1).join('\n');
-						const expectedStart = new RegExp(`^(\`{3,}|~{3,})${language}`, 'm');
+						const expectedStart = new RegExp(`^[ \\t]*(\`{3,}|~{3,})${language}`, 'm');
 						if (!expectedStart.test(blockLines)) {
 							return; // Stale sectionInfo, wait for Obsidian to trigger a native re-render
 						}
@@ -168,14 +184,11 @@ export default class EasyTimelinePlugin extends Plugin {
 						contentToParse = textWithoutBlock.slice(contentStart);
 					} else {
 						const { contentStart } = getFrontMatterInfo(text);
-						const normalizedSource = source.replace(/\r\n/g, '\n');
-						const escapedSource = normalizedSource.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\n/g, '(?:[ \\t]*)\\r?\\n');
-						const sourceBlockRegex = new RegExp("(`{3,}|~{3,})" + language + "(?:.*)\\r?\\n" + (source ? escapedSource + "(?:[ \\t]*)\\r?\\n" : "") + "\\1", "g");
 						contentToParse = text.slice(contentStart).replace(sourceBlockRegex, '');
 					}
 
 					// Remove any other timeline blocks to prevent recursion
-					const allTimelineBlocksRegex = new RegExp("(`{3,}|~{3,})" + language + "(?:[ \\t].*)?\\r?\\n(?:[\\s\\S]*?(?:\\r?\\n))?\\1", "g");
+					const allTimelineBlocksRegex = new RegExp("^[ \\t]*(`{3,}|~{3,})" + language + "(?:[ \\t].*)?\\r?\\n(?:[\\s\\S]*?(?:\\r?\\n))?^[ \\t]*\\1", "gm");
 					contentToParse = contentToParse.replace(allTimelineBlocksRegex, '');
 				}
 
