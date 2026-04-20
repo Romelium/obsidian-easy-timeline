@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-easy-timeline",
 	"version": "2.2.0",
-	"description": "Simplifies creating and visualizing timelines from text using dates and metadata",
+	"description": "Create beautiful visual timelines from your notes using natural language dates (e.g., 'yesterday', 'next week'). Customize events with inline metadata, icons, and statuses. Supports relative dates via frontmatter properties and timezones.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
@@ -11,7 +11,13 @@
 	"keywords": [
 		"obsidian",
 		"plugin",
-		"timeline"
+		"timeline",
+		"history",
+		"chronology",
+		"events",
+		"natural-language",
+		"dates",
+		"visualization"
 	],
 	"author": "Romelium",
 	"license": "MIT",
