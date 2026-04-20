@@ -205,8 +205,9 @@ export default class EasyTimelinePlugin extends Plugin {
 				const reference = metadataReference ?? (await this.findReference(actualFile));
 
 				// Define common timezones so Chrono understands abbreviations
-				const tzMap = {
+				const tzMap: Record<string, number> = {
 					// North America
+					NST: -210, NDT: -150,
 					AST: -240, ADT: -180,
 					EST: -300, EDT: -240,
 					CST: -360, CDT: -300,
@@ -214,21 +215,63 @@ export default class EasyTimelinePlugin extends Plugin {
 					PST: -480, PDT: -420,
 					AKST: -540, AKDT: -480,
 					HST: -600, HDT: -540,
+					HAST: -600, HADT: -540,
+					// South America
+					ART: -180,
+					BOT: -240,
+					BRT: -180, BRST: -120,
+					CLT: -240, CLST: -180,
+					COT: -300,
+					ECT: -300,
+					PET: -300,
+					UYT: -180, UYST: -120,
+					VET: -240,
 					// Europe
 					WET: 0, WEST: 60,
 					CET: 60, CEST: 120,
 					EET: 120, EEST: 180,
+					BST: 60,
+					MSK: 180,
+					TRT: 180,
+					// Africa
+					WAT: 60,
+					CAT: 120,
+					EAT: 180,
+					SAST: 120,
+					// Asia
+					IRST: 210, IRDT: 270,
+					GST: 240,
+					AFT: 270,
+					PKT: 300,
+					IST: 330,
+					NPT: 345,
+					BTT: 360,
+					MMT: 390,
+					ICT: 420,
+					WIB: 420,
+					WITA: 480,
+					SGT: 480,
+					HKT: 480,
+					PHT: 480,
+					MYT: 480,
+					JST: 540, KST: 540,
+					WIT: 540,
 					// Australia
 					AWST: 480, AWDT: 540,
+					ACWST: 525,
 					ACST: 570, ACDT: 630,
 					AEST: 600, AEDT: 660,
-					// New Zealand
+					LHST: 630, LHDT: 660,
+					// New Zealand & Pacific
 					NZST: 720, NZDT: 780,
-					// Asia
-					JST: 540, KST: 540,
-					IST: 330,
+					CHAST: 765, CHADT: 825,
+					FJT: 720, FJST: 780,
+					PGT: 600,
+					SBT: 660,
+					SST: -660,
+					CHUT: 600,
 					// Universal
-					GMT: 0, UTC: 0
+					GMT: 0, UTC: 0, Z: 0
 				};
 
 				// Get timeline object representation
