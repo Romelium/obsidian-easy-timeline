@@ -134,6 +134,26 @@ If you don't want dataview to detect a inline metadata, just use a single colon 
 - You can display the exact date and time written in the text, respecting timezones like (EST) or (JST) by toggling the `Preserve Timezones` setting. By default, it sorts events by their absolute global time.
 - You can sort events by their local time (ignoring timezone differences) instead of their absolute global time by toggling the `Sort Relative to Timezone` setting.
 
+### Language
+
+Easy Timeline uses the language Obsidian is set to (Settings → General → Language). There is nothing to configure.
+
+Month and weekday names, times and the entry count follow that language. The settings page is translated too for French, German, Spanish, Italian, Portuguese, Dutch, Russian, Ukrainian, Japanese, Korean and Chinese; other languages see English there.
+
+You can also write your dates in your own language. With Obsidian set to French, this works:
+
+```md
+Demain à 14h. Rendez-vous chez le dentiste.
+
+21 septembre 2026. Départ en vacances.
+```
+
+English dates still work in the same note, so mixing is fine, and so are the `created` property and `reference`. Dates are understood in French, German, Spanish, Italian, Portuguese, Dutch, Russian, Ukrainian, Japanese, Swedish, Finnish, Vietnamese, Indonesian, Arabic and Chinese. German, Spanish, Portuguese, Swedish and Chinese recognise fewer phrases than the others (that is a limit of [Chrono](https://github.com/wanasit/chrono), the date parser). In any other language, such as Korean, write dates in English.
+
+Slash dates follow your language: `12/03/2026` is 12 March in French and English (UK), and 3 December in English (US).
+
+Spotted a wrong translation? Open an [issue](https://github.com/Romelium/obsidian-easy-timeline/issues) and it will get fixed.
+
 ### Customizing the Source Block
 
 You can provide explicit settings (`reference` and `sort`) in several ways. These settings have the highest precedence.

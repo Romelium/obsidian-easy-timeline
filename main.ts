@@ -1,5 +1,5 @@
-import { parse, strict } from 'chrono-node';
 import { App, Component, debounce, Editor, getFrontMatterInfo, MarkdownRenderChild, MarkdownView, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { parse, parseDate } from 'src/dateParser';
 import { t } from 'src/i18n';
 import { renderTimeline, TimelineData } from 'src/renderTimeline';
 import { extractInlineMetadata, extractVariedMetadata } from 'utils';
@@ -57,7 +57,7 @@ export default class EasyTimelinePlugin extends Plugin {
 			let refProp = null;
 
 			// Parse date using the reference or default value. 
-			const parseDateValue = (value: string) => strict.parseDate(value, ref);
+			const parseDateValue = (value: string) => parseDate(value, ref);
 
 			if (regex) {
 				let found = false;
@@ -210,7 +210,7 @@ export default class EasyTimelinePlugin extends Plugin {
 					...languageLineMetadata 
 				};
 
-				const metadataReference = metadata.reference ? strict.parseDate(metadata.reference) : null;
+				const metadataReference = metadata.reference ? parseDate(metadata.reference) : null;
 				const metadataSortRaw = metadata.sort?.toLowerCase();
 				const metadataSort = metadataSortRaw ? { ascending: 'asc', descending: 'desc' }[metadataSortRaw] || metadataSortRaw : null;
 				const sort = ((metadataSort === 'asc' || metadataSort === 'desc') ? metadataSort : this.settings.sort);
