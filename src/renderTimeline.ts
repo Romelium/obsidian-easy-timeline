@@ -1,3 +1,4 @@
+import { formatEntries, getLocale } from 'src/i18n';
 import { extractInlineMetadata, isMarkdownHeader, sanitizeInlineMetadata } from 'utils';
 import { Component, MarkdownRenderer, setIcon } from 'obsidian';
 
@@ -19,13 +20,13 @@ export type TimelineData = TimelineEvent[];
 // Utility to format the date into a readable month and year
 function formatMonth(date: Date) {
     const options: Intl.DateTimeFormatOptions = { year: "numeric", month: 'long' };
-    return date.toLocaleDateString(undefined, options); // "August, 2018"
+    return date.toLocaleDateString(getLocale(), options); // "August, 2018"
 }
 
 // Utility to format the date into a readable day and date
 function formatDate(date: Date) {
     const options: Intl.DateTimeFormatOptions = { day: 'numeric', weekday: 'long' };
-    return date.toLocaleDateString(undefined, options); // "21, Tuesday"
+    return date.toLocaleDateString(getLocale(), options); // "21, Tuesday"
 }
 // Group events by month and day
 type GroupedTimelineData = {
@@ -73,7 +74,7 @@ export async function renderTimeline(timelineData: TimelineData, sortOrder: 'asc
         // Create month header
         const monthHeader = createEl('div', { cls: 'timeline-month', text: month });
         const totalEvents = Object.values(days).reduce((acc, curr) => acc + curr.length, 0);
-        const entryCount = createEl('span', { text: `${totalEvents} Entries` });
+        const entryCount = createEl('span', { text: formatEntries(totalEvents) });
         monthHeader.appendChild(entryCount);
         timeline.appendChild(monthHeader);
 
@@ -103,7 +104,7 @@ export async function renderTimeline(timelineData: TimelineData, sortOrder: 'asc
                 const icon = event.icon || metadata.icon ? createEl('i', { cls: iconCls, text: '' }) : null;
                 if (icon)
                     setIcon(icon, event.icon || metadata.icon);
-                const timeString = event.displayDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+                const timeString = event.displayDate.toLocaleTimeString(getLocale(), { hour: 'numeric', minute: '2-digit' });
                 const time = event.hasTime ? createEl('div', { cls: 'box-title-right', text: timeString }) : null;
 
                 // Box content

@@ -1,5 +1,6 @@
 import { parse, strict } from 'chrono-node';
 import { App, Component, debounce, Editor, getFrontMatterInfo, MarkdownRenderChild, MarkdownView, Plugin, PluginSettingTab, Setting, TFile } from 'obsidian';
+import { t } from 'src/i18n';
 import { renderTimeline, TimelineData } from 'src/renderTimeline';
 import { extractInlineMetadata, extractVariedMetadata } from 'utils';
 
@@ -411,8 +412,8 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 
 		// Setting for 'Use Regex'
 		new Setting(containerEl)
-			.setName('Use Regex')
-			.setDesc('If enabled, the reference setting will use regex to pick which property to use as the reference for dates based on the first regex match.')
+			.setName(t('setting.useRegex.name'))
+			.setDesc(t('setting.useRegex.desc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.useRegex)
 				.onChange(async (value) => {
@@ -423,10 +424,10 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 
 		// Setting for 'Reference'
 		new Setting(containerEl)
-			.setName('Reference')
-			.setDesc('Specify the property name or regex to find which property to use as the reference for dates, if available.')
+			.setName(t('setting.reference.name'))
+			.setDesc(t('setting.reference.desc'))
 			.addText(text => text
-				.setPlaceholder('Enter tag (no hashtag #) or regex')
+				.setPlaceholder(t('setting.reference.placeholder'))
 				.setValue(this.plugin.settings.reference)
 				.onChange(async (value) => {
 					this.plugin.settings.reference = value;
@@ -436,9 +437,9 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 
 		// Setting for 'Default Reference Date'
 		new Setting(containerEl)
-			.setName('Default Reference Date')
-			.setDesc('The file date to use as the default reference if no property is found.')
-			.addDropdown(toggle => toggle.addOptions({ ctime: 'Creation Date', mtime: 'Last Modified Date' })
+			.setName(t('setting.defaultReference.name'))
+			.setDesc(t('setting.defaultReference.desc'))
+			.addDropdown(toggle => toggle.addOptions({ ctime: t('option.ctime'), mtime: t('option.mtime') })
 				.setValue(this.plugin.settings.defaultReferenceType)
 				.onChange(async (value) => {
 					this.plugin.settings.defaultReferenceType = value as 'ctime' | 'mtime';
@@ -448,9 +449,9 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 
 		// Setting for 'Sorting'
 		new Setting(containerEl)
-			.setName('Sorting')
-			.setDesc('The sorting to be used if not specified in source block')
-			.addDropdown(toggle => toggle.addOptions({ asc: 'Ascending', desc: 'Descending' })
+			.setName(t('setting.sort.name'))
+			.setDesc(t('setting.sort.desc'))
+			.addDropdown(toggle => toggle.addOptions({ asc: t('option.asc'), desc: t('option.desc') })
 				.setValue(this.plugin.settings.sort)
 				.onChange(async (value) => {
 					this.plugin.settings.sort = value as 'asc' | 'desc';
@@ -460,8 +461,8 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 
 		// Setting for 'Use single line'
 		new Setting(containerEl)
-			.setName('Use single line')
-			.setDesc('If sections are separated by single lines instead of double lines')
+			.setName(t('setting.singleLine.name'))
+			.setDesc(t('setting.singleLine.desc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.singleLine)
 				.onChange(async (value) => {
@@ -472,8 +473,8 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 
 		// Setting for 'Preserve Timezones'
 		new Setting(containerEl)
-			.setName('Preserve Timezones')
-			.setDesc('If enabled, the timeline will display the exact date and time written in the text, respecting timezones like (EST) or (JST). By default, it sorts events by their absolute global time.')
+			.setName(t('setting.preserveTimezones.name'))
+			.setDesc(t('setting.preserveTimezones.desc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.preserveTimezones)
 				.onChange(async (value) => {
@@ -484,8 +485,8 @@ class EasyTimelineSettingTab extends PluginSettingTab {
 
 		// Setting for 'Sort Relative to Timezone'
 		new Setting(containerEl)
-			.setName('Sort Relative to Timezone')
-			.setDesc('If enabled, the timeline will sort events by their local time (ignoring timezone differences) instead of their absolute global time.')
+			.setName(t('setting.sortRelativeTimezone.name'))
+			.setDesc(t('setting.sortRelativeTimezone.desc'))
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.sortRelativeTimezone)
 				.onChange(async (value) => {
